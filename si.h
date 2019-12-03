@@ -19,16 +19,22 @@ class Token : public AST {
     Token() : type_(kNull), value_(0) {}
     enum Type {
         kEof = 0,
-        kSpace = 1,
-        kPlus = 2,
-        kMinus = 3,
-        kMul = 4,
-        kDiv = 5,
-        kLparent = 6,
-        kRparent = 7,
-        kNum = 8,
-        kNull = 9,
+        kNull,
+        kSpace,
+        kPlus,
+        kMinus,
+        kMul,
+        kDiv,
+        kLparent,
+        kRparent,
+        kNum,
+        kBegin,
+        kEnd,
+        kDot,
+        kAssign,
     };
+    static const std::string BEGIN;
+    static const std::string END;
     Type type() const { return type_; }
     int value() const { return value_; }
     bool operator==(const Token &t) {
@@ -97,11 +103,14 @@ class Lexer {
     }
 
   private:
+    bool isNum(const char &c) { return '0' <= c && c <= '9'; }
     void skipSpaces();
     int parseNum();
     char current() const;
     void advance();
-
+    void parseBegin();
+    void parseEnd();
+    void parseAssign();
     std::string text_;
     std::size_t idx_;
 };

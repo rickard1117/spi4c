@@ -3,7 +3,6 @@
 #include <assert.h>
 namespace SI {
 namespace Interpreter {
-static inline bool isNum(const char &c) { return '0' <= c && c <= '9'; }
 
 char Lexer::current() const {
     if (text_.empty() || idx_ >= text_.length()) {
@@ -25,9 +24,37 @@ int Lexer::parseNum() {
     while (isNum(text_[end]) && end < text_.length()) {
         end++;
     }
+    // FIXME : substr性能问题？
     auto result = std::stoi(text_.substr(idx_, end - idx_));
     idx_ = end;
     return result;
+}
+
+void Lexer::parseBegin() {
+    std::size_t end = idx_ + 5;
+    // FIXME : substr性能问题？
+    if (text_.length() < end || text_.substr(idx_, end - idx_) != "BEGIN") {
+        throw "bad begin";
+    }
+    idx_ = end;
+}
+
+void Lexer::parseEnd() {
+    std::size_t end = idx_ + 3;
+    // FIXME : substr性能问题？
+    if (text_.length() < end || text_.substr(idx_, end - idx_) != "END") {
+        throw "bad end";
+    }
+    idx_ = end;
+}
+
+void Lexer::parseAssign() {
+    std::size_t end = idx_ + 2;
+    // FIXME : substr性能问题？
+    if (text_.length() < end || text_.substr(idx_, end - idx_) != ":=") {
+        throw "bad assign";
+    }
+    idx_ = end;
 }
 
 Token Lexer::getNextToken() {
@@ -48,6 +75,24 @@ Token Lexer::getNextToken() {
         return t;
     }
 
+    if (current() == 'B') {
+        parseBegin();
+        t.type_ = Token::Type::kBegin;
+        return t;
+    }
+
+    if (current() == 'E') {
+        parseEnd();
+        t.type_ = Token::Type::kEnd;
+        return t;
+    }
+
+    if (current() == ':') {
+        parseAssign();
+        t.type_ = Token::Type::kAssign;
+        return t;
+    }
+
     if (current() == '+') {
         t.type_ = Token::Type::kPlus;
     } else if (current() == '-') {
@@ -60,6 +105,8 @@ Token Lexer::getNextToken() {
         t.type_ = Token::Type::kLparent;
     } else if (current() == ')') {
         t.type_ = Token::Type::kRparent;
+    } else if (current() == '.') {
+        t.type_ = Token::Type::kDot;
     } else {
         throw "bad token";
     }

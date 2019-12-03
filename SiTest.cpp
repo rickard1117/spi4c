@@ -76,6 +76,21 @@ TEST(Lexer, TestComplicatedFormula) {
     EXPECT_EQ(l.getNextToken().type(), Token::Type::kEof);
 }
 
+TEST(Lexer, TestBeginToken) {
+    Lexer l{"BEGIN"};
+    EXPECT_EQ(l.getNextToken().type(), Token::Type::kBegin);
+}
+
+TEST(Lexer, TestDotToken) {
+    Lexer l{"."};
+    EXPECT_EQ(l.getNextToken().type(), Token::Type::kDot);
+}
+
+TEST(Lexer, TestAssignToken) {
+    Lexer l{":="};
+    EXPECT_EQ(l.getNextToken().type(), Token::Type::kAssign);
+}
+
 class TestInterpreter : public ::testing::Test {
   public:
     Interpreter i;
