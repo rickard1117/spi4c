@@ -30,29 +30,40 @@ int Lexer::parseNum() {
     return result;
 }
 
-void Lexer::parseBegin() {
+bool Lexer::parseBegin() {
     std::size_t end = idx_ + 5;
     // FIXME : substr性能问题？
     if (text_.length() < end || text_.substr(idx_, end - idx_) != "BEGIN") {
-        throw "bad begin";
+        return false;
     }
     idx_ = end;
+    return true;
 }
 
-void Lexer::parseEnd() {
+bool Lexer::parseEnd() {
     std::size_t end = idx_ + 3;
     // FIXME : substr性能问题？
     if (text_.length() < end || text_.substr(idx_, end - idx_) != "END") {
-        throw "bad end";
+        return false;
     }
     idx_ = end;
+    return true;
 }
 
-void Lexer::parseAssign() {
+bool Lexer::parseAssign() {
     std::size_t end = idx_ + 2;
     // FIXME : substr性能问题？
     if (text_.length() < end || text_.substr(idx_, end - idx_) != ":=") {
-        throw "bad assign";
+        return false;
+    }
+    idx_ = end;
+    return true;
+}
+
+void Lexer::parseVar() {
+    std::size_t end = idx_;
+    if (end < text_.length() && isLetter(text_[end])) {
+        end++;
     }
     idx_ = end;
 }
@@ -76,14 +87,28 @@ Token Lexer::getNextToken() {
     }
 
     if (current() == 'B') {
-        parseBegin();
-        t.type_ = Token::Type::kBegin;
+        if (parseBegin()) {
+            t.type_ = Token::Type::kBegin;
+            return t;
+        }
+        parseVar();
+        t.type_ = Token::Type::kVar;
         return t;
     }
 
     if (current() == 'E') {
-        parseEnd();
-        t.type_ = Token::Type::kEnd;
+        if (parseEnd()) {
+            t.type_ = Token::Type::kEnd;
+            return t;
+        }
+        parseVar();
+        t.type_ = Token::Type::kVar;
+        return t;
+    }
+
+    if (isLetter(current())) {
+        parseVar();
+        t.type_ = Token::Type::kVar;
         return t;
     }
 

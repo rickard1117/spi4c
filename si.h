@@ -32,6 +32,7 @@ class Token : public AST {
         kEnd,
         kDot,
         kAssign,
+        kVar,
     };
     static const std::string BEGIN;
     static const std::string END;
@@ -104,13 +105,15 @@ class Lexer {
 
   private:
     bool isNum(const char &c) { return '0' <= c && c <= '9'; }
+    bool isLetter(const char &c) {return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');}
     void skipSpaces();
     int parseNum();
     char current() const;
     void advance();
-    void parseBegin();
-    void parseEnd();
-    void parseAssign();
+    bool parseBegin();
+    bool parseEnd();
+    bool parseAssign();
+    void parseVar();
     std::string text_;
     std::size_t idx_;
 };
