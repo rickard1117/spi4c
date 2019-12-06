@@ -1,8 +1,12 @@
 
 #include "si.h"
+#include "util.h"
 #include <assert.h>
+
 namespace SI {
 namespace Interpreter {
+
+using SI::util::StringPiece;
 
 char Lexer::current() const {
     if (text_.empty() || idx_ >= text_.length()) {
@@ -10,8 +14,6 @@ char Lexer::current() const {
     }
     return text_[idx_];
 }
-
-void Lexer::advance() { idx_++; }
 
 void Lexer::skipSpaces() {
     while (current() == ' ') {
@@ -32,8 +34,7 @@ int Lexer::parseNum() {
 
 bool Lexer::parseBegin() {
     std::size_t end = idx_ + 5;
-    // FIXME : substr性能问题？
-    if (text_.length() < end || text_.substr(idx_, end - idx_) != "BEGIN") {
+    if (text_.length() < end || !StringPiece(&text_[idx_], end).equal("BEGIN")) {
         return false;
     }
     idx_ = end;
@@ -42,8 +43,7 @@ bool Lexer::parseBegin() {
 
 bool Lexer::parseEnd() {
     std::size_t end = idx_ + 3;
-    // FIXME : substr性能问题？
-    if (text_.length() < end || text_.substr(idx_, end - idx_) != "END") {
+    if (text_.length() < end || !StringPiece(&text_[idx_], end).equal("END")) {
         return false;
     }
     idx_ = end;
@@ -52,20 +52,21 @@ bool Lexer::parseEnd() {
 
 bool Lexer::parseAssign() {
     std::size_t end = idx_ + 2;
-    // FIXME : substr性能问题？
-    if (text_.length() < end || text_.substr(idx_, end - idx_) != ":=") {
+    if (text_.length() < end || !StringPiece(&text_[idx_], end).equal(":=")) {
         return false;
     }
     idx_ = end;
     return true;
 }
 
-void Lexer::parseVar() {
+std::string Lexer::parseVar() {
     std::size_t end = idx_;
-    if (end < text_.length() && isLetter(text_[end])) {
+    while (end < text_.length() && isLetter(text_[end])) {
         end++;
     }
+    auto var = text_.substr(idx_, end - idx_);
     idx_ = end;
+    return var;
 }
 
 Token Lexer::getNextToken() {

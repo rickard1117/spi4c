@@ -92,8 +92,10 @@ TEST(Lexer, TestAssignToken) {
 }
 
 TEST(Lexer, TestVarToken) {
-    Lexer l{"a"};
+    Lexer l{"aAbBcC := 3"};
     EXPECT_EQ(l.getNextToken().type(), Token::Type::kVar);
+    EXPECT_EQ(l.getNextToken().type(), Token::Type::kAssign);
+    EXPECT_EQ(l.getNextToken().type(), Token::Type::kNum);
 }
 
 class TestInterpreter : public ::testing::Test {

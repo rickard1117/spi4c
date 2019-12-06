@@ -105,15 +105,15 @@ class Lexer {
 
   private:
     bool isNum(const char &c) { return '0' <= c && c <= '9'; }
-    bool isLetter(const char &c) {return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');}
+    bool isLetter(const char &c) { return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z'); }
     void skipSpaces();
     int parseNum();
     char current() const;
-    void advance();
+    void advance() { idx_++; }
     bool parseBegin();
     bool parseEnd();
     bool parseAssign();
-    void parseVar();
+    std::string parseVar();
     std::string text_;
     std::size_t idx_;
 };
