@@ -1,17 +1,16 @@
-#ifndef SI_H_
-#define SI_H_
-#include "util.h"
-#include <assert.h>
-#include <iostream>
+#ifndef AST_H_
+#define AST_H_
+
 #include <memory>
 #include <string>
 
 namespace SI {
 namespace Interpreter {
 
+class NodeVisitor;
 class AST {
   public:
-    virtual int visit() const = 0;
+    virtual int accept(const NodeVisitor &visitor) const = 0;
 };
 
 class Token : public AST {
@@ -47,13 +46,10 @@ class Token : public AST {
         }
         return true;
     }
-
-    virtual int visit() const override {
-        assert(type_ == kNum);
-        return value_;
-    }
+    virtual int accept(const NodeVisitor &visitor) const override;
 
   private:
+    friend class NodeVisitor;
     friend class Lexer;
     Type type_;
     int value_;
@@ -62,9 +58,10 @@ class Token : public AST {
 class Num : public AST {
   public:
     Num(int value) : value_(value) {}
-    virtual int visit() const override { return value_; }
+    virtual int accept(const NodeVisitor &visitor) const override;
 
   private:
+    friend class NodeVisitor;
     int value_;
 };
 
@@ -72,9 +69,10 @@ class BinOp : public AST {
   public:
     BinOp(Token::Type type, std::unique_ptr<AST> left, std::unique_ptr<AST> right)
         : type_(type), left_(std::move(left)), right_(std::move(right)) {}
-    virtual int visit() const override;
+    virtual int accept(const NodeVisitor &visitor) const override;
 
   private:
+    friend class NodeVisitor;
     Token::Type type_;
     std::unique_ptr<AST> left_;
     std::unique_ptr<AST> right_;
@@ -83,62 +81,15 @@ class BinOp : public AST {
 class UnaryOp : public AST {
   public:
     UnaryOp(Token::Type type, std::unique_ptr<AST> child) : type_(type), child_(std::move(child)) {}
-    virtual int visit() const override;
+    virtual int accept(const NodeVisitor &visitor) const override;
 
   private:
+    friend class NodeVisitor;
     Token::Type type_;
     std::unique_ptr<AST> child_;
 };
 
-class Lexer {
-  public:
-    Lexer() : idx_(0) {}
-
-    Lexer(const std::string &text) : text_(text), idx_(0) {}
-
-    Token getNextToken();
-
-    void init(const std::string &text) {
-        text_ = text;
-        idx_ = 0;
-    }
-
-  private:
-    bool isNum(const char &c) { return '0' <= c && c <= '9'; }
-    bool isLetter(const char &c) { return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z'); }
-    void skipSpaces();
-    int parseNum();
-    char current() const;
-    void advance() { idx_++; }
-    bool parseBegin();
-    bool parseEnd();
-    bool parseAssign();
-    std::string parseVar();
-    std::string text_;
-    std::size_t idx_;
-};
-
-class Parser {
-  public:
-    Parser(const std::string &formula);
-    std::unique_ptr<AST> expr();
-    std::unique_ptr<AST> term();
-    std::unique_ptr<AST> factor();
-
-  private:
-    int caculate(int num, const Token &op, const Token &t) const;
-    Lexer lexer_;
-    Token currentToken_;
-};
-
-class Interpreter {
-  public:
-    int interpret(const std::string &formula) const;
-
-  private:
-    int visit(const AST &tree) const { return tree.visit(); }
-};
 } // namespace Interpreter
 } // namespace SI
 
-#endif // SI_H_
+#endif // AST_H_
