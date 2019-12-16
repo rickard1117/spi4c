@@ -1,4 +1,5 @@
-#include "si.h"
+#include "Interpreter.h"
+#include "Lexer.h"
 #include "gtest/gtest.h"
 
 using SI::Interpreter::AST;

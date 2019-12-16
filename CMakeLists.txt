@@ -12,7 +12,9 @@ set(CMAKE_CXX_FLAGS "-std=c++11 -g -O2 -Wall -Wno-deprecated")
 include_directories(${GTEST_DIR_INC} ${GMOCK_DIR_INC})
 link_directories(${GTEST_DIR_LIB})
 
-add_executable(si si.h si.cpp main.cpp)
-add_executable(test si.h si.cpp SiTest.cpp)
+set(SRC_FILES AST.h AST.cpp Interpreter.h Interpreter.cpp Lexer.h Lexer.cpp NodeVisitor.h NodeVisitor.cpp Parser.h Parser.cpp util.h)
+set(TEST_FILES SiTest.cpp)
+
+add_executable(test ${SRC_FILES} SiTest.cpp)
 
 target_link_libraries(test libgtestall.a pthread)
