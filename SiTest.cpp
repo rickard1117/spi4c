@@ -1,10 +1,13 @@
-#include "Interpreter.h"
+// #include "Interpreter.h"
 #include "Lexer.h"
+#include "NodeVisitor.h"
+#include "Parser.h"
 #include "gtest/gtest.h"
 
 using SI::Interpreter::AST;
-using SI::Interpreter::Interpreter;
 using SI::Interpreter::Lexer;
+using SI::Interpreter::NodeVisitor;
+using SI::Interpreter::Parser;
 using SI::Interpreter::Token;
 
 TEST(Lexer, TestSingleEOF) {
@@ -99,36 +102,38 @@ TEST(Lexer, TestVarToken) {
     EXPECT_EQ(l.getNextToken().type(), Token::Type::kNum);
 }
 
-class TestInterpreter : public ::testing::Test {
-  public:
-    Interpreter i;
-};
-
-TEST_F(TestInterpreter, OneNumFormula) { ASSERT_EQ(i.interpret("2"), 2); }
-
-TEST_F(TestInterpreter, CharWithSpaces) { ASSERT_EQ(i.interpret("  2 "), 2); }
-
-TEST_F(TestInterpreter, TwoNumFormula) { ASSERT_EQ(i.interpret(" 2 * 3"), 6); }
-
-TEST_F(TestInterpreter, MultiNumPlusMinusFormula) {
-    ASSERT_EQ(i.interpret(" 12 + 133 - 1 - 10"), 134);
+static int parseArithmeticExpr(const std::string &formula) {
+    Parser p{formula};
+    auto ast = p.expr();
+    NodeVisitor visitor;
+    return ast->accept(visitor);
 }
 
-TEST_F(TestInterpreter, MultiMixedFormula) {
-    ASSERT_EQ(i.interpret(" 1 + 10 * 10 - 6 / 2 + 20"), 118);
+TEST(TestParser, OneNumFormula) { ASSERT_EQ(parseArithmeticExpr("2"), 2); }
+
+TEST(TestParser, CharWithSpaces) { ASSERT_EQ(parseArithmeticExpr("  2 "), 2); }
+
+TEST(TestParser, TwoNumFormula) { ASSERT_EQ(parseArithmeticExpr(" 2 * 3"), 6); }
+
+TEST(TestParser, MultiNumPlusMinusFormula) {
+    ASSERT_EQ(parseArithmeticExpr(" 12 + 133 - 1 - 10"), 134);
 }
 
-TEST_F(TestInterpreter, MixedWithParentFormula) {
-    ASSERT_EQ(i.interpret(" (1 + 2) * 3 + 4 / 2"), 11);
+TEST(TestParser, MultiMixedFormula) {
+    ASSERT_EQ(parseArithmeticExpr(" 1 + 10 * 10 - 6 / 2 + 20"), 118);
 }
 
-TEST_F(TestInterpreter, ComplicatedFormula) {
-    ASSERT_EQ(i.interpret("7 + 3 * (10 / (12 / (3 + 1) - 1)) / (2 + 3) - 5 - 3 + (8)"), 10);
+TEST(TestParser, MixedWithParentFormula) {
+    ASSERT_EQ(parseArithmeticExpr(" (1 + 2) * 3 + 4 / 2"), 11);
 }
 
-TEST_F(TestInterpreter, MultiParents) { ASSERT_EQ(i.interpret("7 + (((3 + 2)))"), 12); }
+TEST(TestParser, ComplicatedFormula) {
+    ASSERT_EQ(parseArithmeticExpr("7 + 3 * (10 / (12 / (3 + 1) - 1)) / (2 + 3) - 5 - 3 + (8)"), 10);
+}
 
-TEST_F(TestInterpreter, SimpleUnary) { ASSERT_EQ(i.interpret("-3"), -3); }
+TEST(TestParser, MultiParents) { ASSERT_EQ(parseArithmeticExpr("7 + (((3 + 2)))"), 12); }
+
+TEST(TestParser, SimpleUnary) { ASSERT_EQ(parseArithmeticExpr("-3"), -3); }
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
