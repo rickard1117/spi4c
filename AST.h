@@ -10,7 +10,7 @@ namespace Interpreter {
 class NodeVisitor;
 class AST {
   public:
-    virtual int accept(const NodeVisitor &visitor) const = 0;
+    virtual int accept(NodeVisitor *visitor) const = 0;
 };
 
 class Token : public AST {
@@ -46,7 +46,7 @@ class Token : public AST {
         }
         return true;
     }
-    virtual int accept(const NodeVisitor &visitor) const override;
+    virtual int accept(NodeVisitor *visitor) const override;
 
   private:
     friend class NodeVisitor;
@@ -59,7 +59,7 @@ class Token : public AST {
 class Num : public AST {
   public:
     Num(int value) : value_(value) {}
-    virtual int accept(const NodeVisitor &visitor) const override;
+    virtual int accept(NodeVisitor *visitor) const override;
 
   private:
     friend class NodeVisitor;
@@ -70,7 +70,7 @@ class BinOp : public AST {
   public:
     BinOp(Token::Type type, std::unique_ptr<AST> left, std::unique_ptr<AST> right)
         : type_(type), left_(std::move(left)), right_(std::move(right)) {}
-    virtual int accept(const NodeVisitor &visitor) const override;
+    virtual int accept(NodeVisitor *visitor) const override;
 
   private:
     friend class NodeVisitor;
@@ -82,12 +82,34 @@ class BinOp : public AST {
 class UnaryOp : public AST {
   public:
     UnaryOp(Token::Type type, std::unique_ptr<AST> child) : type_(type), child_(std::move(child)) {}
-    virtual int accept(const NodeVisitor &visitor) const override;
+    virtual int accept(NodeVisitor *visitor) const override;
 
   private:
     friend class NodeVisitor;
     Token::Type type_;
     std::unique_ptr<AST> child_;
+};
+
+class Var : public AST {
+  public:
+    Var(const std::string &id) : id_(id) {}
+    virtual int accept(NodeVisitor *visitor) const override;
+
+  private:
+    friend class NodeVisitor;
+    const std::string id_;
+};
+
+class Assign : public AST {
+  public:
+    Assign(std::unique_ptr<Var> var, std::unique_ptr<AST> expr)
+        : var_(std::move(var)), expr_(std::move(expr)) {}
+    virtual int accept(NodeVisitor *visitor) const override;
+
+  private:
+    friend class NodeVisitor;
+    std::unique_ptr<Var> var_;
+    std::unique_ptr<AST> expr_;
 };
 
 } // namespace Interpreter

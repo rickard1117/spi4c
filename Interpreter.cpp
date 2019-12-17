@@ -10,7 +10,7 @@ int Interpreter::interpret(const std::string &formula) const {
     Parser parser{formula};
     std::unique_ptr<AST> tree = parser.expr();
     NodeVisitor visitor;
-    return tree->accept(visitor);
+    return tree->accept(&visitor);
 }
 
 } // namespace Interpreter

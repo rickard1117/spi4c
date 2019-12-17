@@ -111,7 +111,7 @@ static int parseArithmeticExpr(const std::string &formula) {
     Parser p{formula};
     auto ast = p.expr();
     NodeVisitor visitor;
-    return ast->accept(visitor);
+    return ast->accept(&visitor);
 }
 
 TEST(TestParser, OneNumFormula) { ASSERT_EQ(parseArithmeticExpr("2"), 2); }
@@ -140,14 +140,18 @@ TEST(TestParser, MultiParents) { ASSERT_EQ(parseArithmeticExpr("7 + (((3 + 2)))"
 
 TEST(TestParser, SimpleUnary) { ASSERT_EQ(parseArithmeticExpr("-3"), -3); }
 
-// static int parseVar(const std::string &formula) {
-//     Parser p{formula};
-//     auto ast = p.var();
-//     NodeVisitor visitor;
-//     return ast->accept(visitor);
-// }
+static std::map<std::string, int> parseAssignmentStatement(const std::string &formula) {
+    Parser p{formula};
+    auto ast = p.assignmentStatement();
+    NodeVisitor visitor;
+    ast->accept(&visitor);
+    return visitor.varsTable();
+}
 
-// TEST(TestParser, SimpleAssignment) { ASSERT_EQ(parseVar("abc := 3"), 3); }
+TEST(TestParser, SimpleAssignment) {
+    auto table = parseAssignmentStatement("abc := 3");
+    ASSERT_EQ(table["abc"], 3);
+}
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

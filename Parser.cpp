@@ -22,29 +22,29 @@ int Parser::caculate(int num, const Token &op, const Token &token) const {
 
 Parser::Parser(const std::string &formula) {
     lexer_.init(formula);
-    currentToken_ = lexer_.getNextToken();
+    advance();
 }
 
 std::unique_ptr<AST> Parser::factor() {
     if (currentToken_.type() == Token::kNum) {
         std::unique_ptr<AST> num(new Num(currentToken_.value()));
-        currentToken_ = lexer_.getNextToken();
+        advance();
         return num;
     }
 
     if (currentToken_.type() == Token::kLparent) {
-        currentToken_ = lexer_.getNextToken();
+        advance();
         auto ast = expr();
         if (currentToken_.type() != Token::kRparent) {
             throw "bad factor";
         }
-        currentToken_ = lexer_.getNextToken();
+        advance();
         return ast;
     }
 
     if (currentToken_.type() == Token::kPlus || currentToken_.type() == Token::kMinus) {
         auto type = currentToken_.type();
-        currentToken_ = lexer_.getNextToken();
+        advance();
         return std::unique_ptr<AST>(new UnaryOp(type, std::move(factor())));
     }
     throw "bad factor";
@@ -54,11 +54,11 @@ std::unique_ptr<AST> Parser::term() {
     auto left = factor();
     while (currentToken_.type() != Token::kEof) {
         if (currentToken_.type() == Token::kMul) {
-            currentToken_ = lexer_.getNextToken();
+            advance();
             auto right = factor();
             left.reset(new BinOp(Token::kMul, std::move(left), std::move(right)));
         } else if (currentToken_.type() == Token::kDiv) {
-            currentToken_ = lexer_.getNextToken();
+            advance();
             auto right = factor();
             left.reset(new BinOp(Token::kDiv, std::move(left), std::move(right)));
         } else {
@@ -72,11 +72,11 @@ std::unique_ptr<AST> Parser::expr() {
     auto left = term();
     while (currentToken_.type() != Token::kEof) {
         if (currentToken_.type() == Token::kPlus) {
-            currentToken_ = lexer_.getNextToken();
+            advance();
             auto right = term();
             left.reset(new BinOp(Token::kPlus, std::move(left), std::move(right)));
         } else if (currentToken_.type() == Token::kMinus) {
-            currentToken_ = lexer_.getNextToken();
+            advance();
             auto right = term();
             left.reset(new BinOp(Token::kMinus, std::move(left), std::move(right)));
         } else {
@@ -87,10 +87,20 @@ std::unique_ptr<AST> Parser::expr() {
     return left;
 }
 
-std::unique_ptr<AST> Parser::var() {
-    // if (currentToken.type_
-    // return left;
-    return nullptr;
+std::unique_ptr<AST> Parser::assignmentStatement() {
+    if (currentToken_.type() != Token::kVar) {
+        throw "bad factor";
+    }
+
+    auto var = std::unique_ptr<Var>(new Var(currentToken_.varval()));
+    advance();
+    if (currentToken_.type() != Token::kAssign) {
+        throw "bad factor";
+    }
+    advance();
+    auto e = expr();
+    // auto assign = std::unique_ptr<AST>(new Assign());
+    return std::unique_ptr<AST>(new Assign(std::move(var), std::move(e)));
 }
 
 } // namespace Interpreter
