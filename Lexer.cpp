@@ -1,4 +1,5 @@
 #include "Lexer.h"
+#include "assert.h"
 #include "util.h"
 
 namespace SI {
@@ -19,15 +20,17 @@ void Lexer::skipSpaces() {
     }
 }
 
-int Lexer::parseNum() {
+bool Lexer::parseNum(Token *t) {
+    assert(isNum(current()));
     std::size_t end = idx_ + 1;
     while (isNum(text_[end]) && end < text_.length()) {
         end++;
     }
     // FIXME : substr性能问题？
-    auto result = std::stoi(text_.substr(idx_, end - idx_));
+    t->type_ = Token::Type::kNum;
+    t->value_ = std::stoi(text_.substr(idx_, end - idx_));
     idx_ = end;
-    return result;
+    return true;
 }
 
 bool Lexer::parseBegin() {
@@ -48,12 +51,13 @@ bool Lexer::parseEnd() {
     return true;
 }
 
-bool Lexer::parseAssign() {
+bool Lexer::parseAssign(Token *t) {
     std::size_t end = idx_ + 2;
     if (text_.length() < end || !StringPiece(&text_[idx_], end).equal(":=")) {
         return false;
     }
     idx_ = end;
+    t->type_ = Token::Type::kAssign;
     return true;
 }
 
@@ -67,74 +71,88 @@ std::string Lexer::parseVar() {
     return var;
 }
 
+bool Lexer::parseString(Token *t) {
+    assert(isLetter(current()));
+    if (StringPiece(&text_[idx_]).equal("BEGIN")) {
+        advance(5);
+        t->type_ = Token::Type::kBegin;
+        return true;
+    } else if (StringPiece(&text_[idx_]).equal("END")) {
+        advance(3);
+        t->type_ = Token::Type::kEnd;
+        return true;
+    }
+
+    std::size_t end = idx_;
+    while (end < text_.length() && isLetter(text_[end])) {
+        end++;
+    }
+    // auto var = text_.substr(idx_, end - idx_);
+    t->type_ = Token::Type::kVar;
+    t->varval_ = text_.substr(idx_, end - idx_);
+    idx_ = end;
+    return true;
+}
+
 Token Lexer::getNextToken() {
     Token t;
 
-    if (current() == ' ') {
-        skipSpaces();
-    }
+    skipSpaces();
 
     if (current() == '\0') {
         t.type_ = Token::Type::kEof;
         return t;
     }
 
-    if (isNum(current())) {
-        t.type_ = Token::Type::kNum;
-        t.value_ = parseNum();
+    switch (current()) {
+    case '\0':
+        t.type_ = Token::Type::kEof;
         return t;
-    }
-
-    if (current() == 'B') {
-        if (parseBegin()) {
-            t.type_ = Token::Type::kBegin;
+    case '0' ... '9':
+        if (parseNum(&t)) {
             return t;
         }
-        parseVar();
-        t.type_ = Token::Type::kVar;
-        return t;
-    }
-
-    if (current() == 'E') {
-        if (parseEnd()) {
-            t.type_ = Token::Type::kEnd;
+    case ':':
+        if (parseAssign(&t)) {
             return t;
         }
-        parseVar();
-        t.type_ = Token::Type::kVar;
-        return t;
-    }
-
-    if (isLetter(current())) {
-        parseVar();
-        t.type_ = Token::Type::kVar;
-        return t;
-    }
-
-    if (current() == ':') {
-        parseAssign();
-        t.type_ = Token::Type::kAssign;
-        return t;
-    }
-
-    if (current() == '+') {
+    case '+':
         t.type_ = Token::Type::kPlus;
-    } else if (current() == '-') {
+        advance();
+        return t;
+    case '-':
         t.type_ = Token::Type::kMinus;
-    } else if (current() == '*') {
+        advance();
+        return t;
+    case '*':
         t.type_ = Token::Type::kMul;
-    } else if (current() == '/') {
+        advance();
+        return t;
+    case '/':
         t.type_ = Token::Type::kDiv;
-    } else if (current() == '(') {
+        advance();
+        return t;
+    case '(':
         t.type_ = Token::Type::kLparent;
-    } else if (current() == ')') {
+        advance();
+        return t;
+    case ')':
         t.type_ = Token::Type::kRparent;
-    } else if (current() == '.') {
+        advance();
+        return t;
+    case '.':
         t.type_ = Token::Type::kDot;
-    } else {
+        advance();
+        return t;
+    case 'a' ... 'z':
+    case 'A' ... 'Z':
+        if (parseString(&t)) {
+            return t;
+        }
+    default:
         throw "bad token";
     }
-    advance();
+    assert(0);
     return t;
 }
 

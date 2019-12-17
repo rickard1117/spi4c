@@ -10,6 +10,7 @@ namespace util {
 class StringPiece {
   public:
     StringPiece(const char *start, std::size_t len) : str_(start), len_(len) {}
+    StringPiece(const char *start) : str_(start), len_(strlen(start)) {}
     bool empty() const { return len_ == 0; }
 
     std::size_t length() const { return len_; }

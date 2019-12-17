@@ -23,12 +23,13 @@ class Lexer {
     bool isNum(const char &c) { return '0' <= c && c <= '9'; }
     bool isLetter(const char &c) { return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z'); }
     void skipSpaces();
-    int parseNum();
+    bool parseNum(Token *);
     char current() const;
-    void advance() { idx_++; }
+    void advance(int step = 1) { idx_ += step; }
     bool parseBegin();
     bool parseEnd();
-    bool parseAssign();
+    bool parseAssign(Token *);
+    bool parseString(Token *);
     std::string parseVar();
     std::string text_;
     std::size_t idx_;

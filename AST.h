@@ -33,10 +33,9 @@ class Token : public AST {
         kAssign,
         kVar,
     };
-    static const std::string BEGIN;
-    static const std::string END;
     Type type() const { return type_; }
     int value() const { return value_; }
+    const std::string &varval() { return varval_; }
     bool operator==(const Token &t) {
         if (type_ != t.type_) {
             return false;
@@ -53,6 +52,7 @@ class Token : public AST {
     friend class Lexer;
     Type type_;
     int value_;
+    std::string varval_;
 };
 
 class Num : public AST {

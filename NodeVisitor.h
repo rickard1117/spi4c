@@ -11,7 +11,6 @@ class UnaryOp;
 
 class NodeVisitor {
   public:
-    // void visit_tok(const AST &) const;
     int visit(const Token &) const;
     int visit(const Num &) const;
     int visit(const BinOp &) const;
