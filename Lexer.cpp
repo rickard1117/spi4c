@@ -87,7 +87,6 @@ bool Lexer::parseString(Token *t) {
     while (end < text_.length() && isLetter(text_[end])) {
         end++;
     }
-    // auto var = text_.substr(idx_, end - idx_);
     t->type_ = Token::Type::kVar;
     t->varval_ = text_.substr(idx_, end - idx_);
     idx_ = end;
