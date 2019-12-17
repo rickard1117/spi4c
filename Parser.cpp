@@ -87,5 +87,11 @@ std::unique_ptr<AST> Parser::expr() {
     return left;
 }
 
+std::unique_ptr<AST> Parser::var() {
+    // if (currentToken.type_
+    // return left;
+    return nullptr;
+}
+
 } // namespace Interpreter
 } // namespace SI

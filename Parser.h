@@ -14,6 +14,7 @@ class Parser {
     std::unique_ptr<AST> expr();
     std::unique_ptr<AST> term();
     std::unique_ptr<AST> factor();
+    std::unique_ptr<AST> var();
 
   private:
     int caculate(int num, const Token &op, const Token &t) const;

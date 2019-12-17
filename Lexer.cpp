@@ -143,6 +143,10 @@ Token Lexer::getNextToken() {
         t.type_ = Token::Type::kDot;
         advance();
         return t;
+    case ';':
+        t.type_ = Token::Type::kSemi;
+        advance();
+        return t;
     case 'a' ... 'z':
     case 'A' ... 'Z':
         if (parseString(&t)) {

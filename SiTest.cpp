@@ -102,6 +102,11 @@ TEST(Lexer, TestVarToken) {
     EXPECT_EQ(l.getNextToken().type(), Token::Type::kNum);
 }
 
+TEST(Lexer, TestSemiToken) {
+    Lexer l{";"};
+    EXPECT_EQ(l.getNextToken().type(), Token::Type::kSemi);
+}
+
 static int parseArithmeticExpr(const std::string &formula) {
     Parser p{formula};
     auto ast = p.expr();
@@ -134,6 +139,15 @@ TEST(TestParser, ComplicatedFormula) {
 TEST(TestParser, MultiParents) { ASSERT_EQ(parseArithmeticExpr("7 + (((3 + 2)))"), 12); }
 
 TEST(TestParser, SimpleUnary) { ASSERT_EQ(parseArithmeticExpr("-3"), -3); }
+
+// static int parseVar(const std::string &formula) {
+//     Parser p{formula};
+//     auto ast = p.var();
+//     NodeVisitor visitor;
+//     return ast->accept(visitor);
+// }
+
+// TEST(TestParser, SimpleAssignment) { ASSERT_EQ(parseVar("abc := 3"), 3); }
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

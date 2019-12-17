@@ -32,6 +32,7 @@ class Token : public AST {
         kDot,
         kAssign,
         kVar,
+        kSemi,
     };
     Type type() const { return type_; }
     int value() const { return value_; }
