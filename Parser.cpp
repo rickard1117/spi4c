@@ -103,5 +103,22 @@ std::unique_ptr<AST> Parser::assignmentStatement() {
     return std::unique_ptr<AST>(new Assign(std::move(var), std::move(e)));
 }
 
+std::unique_ptr<AST> Parser::statementList() {
+    auto assignment = assignmentStatement();
+    while (currentToken_.type() != Token::kSemi) {
+        return assignment;
+    }
+
+    while (currentToken_.type() == Token::kSemi) {
+        advance();
+        auto assign = assignmentStatement();
+    }
+
+
+
+
+
+}
+
 } // namespace Interpreter
 } // namespace SI

@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace SI {
 namespace Interpreter {
@@ -110,6 +111,17 @@ class Assign : public AST {
     friend class NodeVisitor;
     std::unique_ptr<Var> var_;
     std::unique_ptr<AST> expr_;
+};
+
+class StatementList : public AST {
+  public:
+    StatementList() {}
+    virtual int accept(NodeVisitor *visitor) const override;
+    void add(std::unique_ptr<AST> ast);
+
+  private:
+    friend class NodeVisitor;
+    std::vector<std::unique_ptr<AST>> statements_;
 };
 
 } // namespace Interpreter

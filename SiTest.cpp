@@ -153,6 +153,13 @@ TEST(TestParser, SimpleAssignment) {
     ASSERT_EQ(table["abc"], 3);
 }
 
+TEST(TestParser, AssignStatementList) {
+    Parser p{"abc := 3;cba := 4;edf123 := 123"};
+    auto ast = p.statementList();
+    NodeVisitor visitor;
+    ast->accept(&visitor);
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
