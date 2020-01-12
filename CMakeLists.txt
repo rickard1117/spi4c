@@ -17,4 +17,4 @@ set(TEST_FILES SiTest.cpp)
 
 add_executable(test ${SRC_FILES} SiTest.cpp)
 
-target_link_libraries(test libgtestall.a pthread)
+target_link_libraries(test libgtest.a pthread)
