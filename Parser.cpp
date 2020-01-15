@@ -6,6 +6,14 @@
 
 namespace SI {
 namespace Interpreter {
+
+void Parser::eat(const Token::Type &t) {
+  if (currentToken_.type() != t) {
+    throw "bad factor";
+  }
+  advance();
+}
+
 int Parser::caculate(int num, const Token &op, const Token &token) const {
   if (op.type() == Token::kPlus) {
     num += token.value();
@@ -38,10 +46,7 @@ std::unique_ptr<AST> Parser::factor() {
   if (currentToken_.type() == Token::kLparent) {
     advance();
     auto ast = expr();
-    if (currentToken_.type() != Token::kRparent) {
-      throw "bad factor";
-    }
-    advance();
+    eat(Token::kRparent);
     return ast;
   }
 
@@ -98,28 +103,21 @@ std::unique_ptr<AST> Parser::assignmentStatement() {
 
   auto var = std::unique_ptr<Var>(new Var(currentToken_.varval()));
   advance();
-  if (currentToken_.type() != Token::kAssign) {
-    throw "bad factor";
-  }
-  advance();
+  eat(Token::kAssign);
   auto e = expr();
   return std::unique_ptr<AST>(new Assign(std::move(var), std::move(e)));
 }
 
+std::unique_ptr<AST> Parser::program() {
+  auto com = compoundStatement();
+  eat(Token::kDot);
+  return com;
+}
+
 std::unique_ptr<AST> Parser::compoundStatement() {
-  if (currentToken_.type() != Token::kBegin) {
-    throw "bad factor";
-  }
-  advance();
-
+  eat(Token::kBegin);
   auto list = statementList();
-
-  if (currentToken_.type() != Token::kEnd) {
-    std::cout << currentToken_.type() << '\n';
-    throw "bad factor";
-  }
-  advance();
-
+  eat(Token::kEnd);
   return list;
 }
 
