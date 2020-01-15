@@ -171,6 +171,30 @@ TEST(TestParser, MultiAssignCompoundStatement) {
   ASSERT_EQ(table["ghi"], 5);
 }
 
+TEST(TestParser, MultiCompoundStatement) {
+  const std::string s =
+      "BEGIN"
+      "abc:=3;"
+      "BEGIN"
+      "xxx:=123;"
+      "yyy:=234"
+      "END;"
+      "def := 4;"
+      "ghi:= 5"
+      "END.";
+  Parser p{s};
+  auto ast = p.compoundStatement();
+  NodeVisitor visitor;
+  ast->accept(&visitor);
+  auto table = visitor.varsTable();
+
+  ASSERT_EQ(table["abc"], 3);
+  ASSERT_EQ(table["def"], 4);
+  ASSERT_EQ(table["ghi"], 5);
+  ASSERT_EQ(table["xxx"], 123);
+  ASSERT_EQ(table["yyy"], 234);
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
