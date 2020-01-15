@@ -1,4 +1,5 @@
 #include "NodeVisitor.h"
+
 #include "AST.h"
 
 namespace SI {
@@ -9,39 +10,46 @@ int NodeVisitor::visit(const Token &t) { return t.value_; }
 int NodeVisitor::visit(const Num &n) { return n.value_; }
 
 int NodeVisitor::visit(const BinOp &op) {
-    if (op.type_ == Token::kPlus) {
-        return op.left_->accept(this) + op.right_->accept(this);
-    } else if (op.type_ == Token::kMinus) {
-        return op.left_->accept(this) - op.right_->accept(this);
-    } else if (op.type_ == Token::kMul) {
-        return op.left_->accept(this) * op.right_->accept(this);
-    } else if (op.type_ == Token::kDiv) {
-        return op.left_->accept(this) / op.right_->accept(this);
-    } else {
-        throw "bad visit";
-    }
+  if (op.type_ == Token::kPlus) {
+    return op.left_->accept(this) + op.right_->accept(this);
+  } else if (op.type_ == Token::kMinus) {
+    return op.left_->accept(this) - op.right_->accept(this);
+  } else if (op.type_ == Token::kMul) {
+    return op.left_->accept(this) * op.right_->accept(this);
+  } else if (op.type_ == Token::kDiv) {
+    return op.left_->accept(this) / op.right_->accept(this);
+  } else {
+    throw "bad visit";
+  }
 }
 
 int NodeVisitor::visit(const UnaryOp &op) {
-    if (op.type_ == Token::kPlus) {
-        return op.child_->accept(this);
-    } else if (op.type_ == Token::kMinus) {
-        return op.child_->accept(this) * (-1);
-    } else {
-        throw "bad visit";
-    }
+  if (op.type_ == Token::kPlus) {
+    return op.child_->accept(this);
+  } else if (op.type_ == Token::kMinus) {
+    return op.child_->accept(this) * (-1);
+  } else {
+    throw "bad visit";
+  }
 }
 
 int NodeVisitor::visit(const Var &var) {
-    currentVar_ = var.id_;
-    return 0;
+  currentVar_ = var.id_;
+  return 0;
 }
 
 int NodeVisitor::visit(const Assign &assign) {
-    assign.var_->accept(this);
-    varsTable_[assign.var_->id_] = assign.expr_->accept(this);
-    return 0;
+  assign.var_->accept(this);
+  varsTable_[assign.var_->id_] = assign.expr_->accept(this);
+  return 0;
 }
 
-} // namespace Interpreter
-} // namespace SI
+int NodeVisitor::visit(const Compound &com) {
+  for (auto &child : com.children_) {
+    child->accept(this);
+  }
+  return 0;
+}
+
+}  // namespace Interpreter
+}  // namespace SI
