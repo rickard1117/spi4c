@@ -177,9 +177,9 @@ TEST(TestParser, MultiCompoundStatementProgram) {
       "BEGIN"
       "xxx:=123;"
       "yyy:=234"
-      "END;"
+      "END;;"
       "def := 4;"
-      "ghi:= 5"
+      "ghi:= 5;;"
       "END.";
   Parser p{s};
   auto ast = p.program();
