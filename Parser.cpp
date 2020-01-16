@@ -38,7 +38,7 @@ Parser::Parser(const std::string &formula) {
 
 std::unique_ptr<AST> Parser::factor() {
   if (currentToken_.type() == Token::kNum) {
-    std::unique_ptr<AST> num(new Num(currentToken_.value()));
+    std::unique_ptr<AST> num = std::make_unique<Num>(currentToken_.value());
     advance();
     return num;
   }
@@ -54,7 +54,7 @@ std::unique_ptr<AST> Parser::factor() {
       currentToken_.type() == Token::kMinus) {
     auto type = currentToken_.type();
     advance();
-    return std::unique_ptr<AST>(new UnaryOp(type, std::move(factor())));
+    return std::make_unique<UnaryOp>(type, std::move(factor()));
   }
 
   if (currentToken_.type() == Token::kVar) {
@@ -108,11 +108,11 @@ std::unique_ptr<AST> Parser::assignmentStatement() {
     throw "bad factor";
   }
 
-  auto var = std::unique_ptr<Var>(new Var(currentToken_.varval()));
+  auto var = std::make_unique<Var>(currentToken_.varval());
   advance();
   eat(Token::kAssign);
   auto e = expr();
-  return std::unique_ptr<AST>(new Assign(std::move(var), std::move(e)));
+  return std::make_unique<Assign>(std::move(var), std::move(e));
 }
 
 std::unique_ptr<AST> Parser::program() {
@@ -128,9 +128,7 @@ std::unique_ptr<AST> Parser::compoundStatement() {
   return list;
 }
 
-std::unique_ptr<AST> Parser::empty() {
-  return std::unique_ptr<AST>(new NoOp());
-}
+std::unique_ptr<AST> Parser::empty() { return std::make_unique<NoOp>(); }
 
 std::unique_ptr<AST> Parser::statement() {
   if (currentToken_.type() == Token::kBegin) {
@@ -145,7 +143,7 @@ std::unique_ptr<AST> Parser::statement() {
 }
 
 std::unique_ptr<AST> Parser::statementList() {
-  auto list = std::unique_ptr<Compound>(new Compound());
+  auto list = std::make_unique<Compound>();
   list->add(statement());
   while (currentToken_.type() == Token::kSemi) {
     advance();
