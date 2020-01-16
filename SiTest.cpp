@@ -166,7 +166,7 @@ std::map<std::string, int> ParserProgram(const std::string &s) {
 }
 
 TEST(TestParser, MultiAssignCompoundStatementProgram) {
-  const std::string s = "PROGRAM part;BEGIN abc:=3; def := 4; ghi:= 5 END.";
+  const std::string s = "PROGRAM part3;BEGIN abc:=3; def := 4; ghi:= 5 END.";
   auto table = ParserProgram(s);
 
   ASSERT_EQ(table["abc"], 3);
@@ -175,15 +175,15 @@ TEST(TestParser, MultiAssignCompoundStatementProgram) {
 }
 
 TEST(TestParser, UseDefinedVar) {
-  const std::string s = "PROGRAM part;BEGIN A := 1; b := A + 2 END.";
+  const std::string s = "PROGRAM part1;BEGIN A1 := 1; b := A1 + 2 END.";
   auto table = ParserProgram(s);
-  ASSERT_EQ(table["A"], 1);
+  ASSERT_EQ(table["A1"], 1);
   ASSERT_EQ(table["b"], 3);
 }
 
 TEST(TestParser, MultiCompoundStatementProgram) {
   const std::string s =
-      "PROGRAM part;"
+      "PROGRAM part2;"
       "BEGIN"
       "abc:=3;"
       "BEGIN"
