@@ -116,6 +116,9 @@ std::unique_ptr<AST> Parser::assignmentStatement() {
 }
 
 std::unique_ptr<AST> Parser::program() {
+  eat(Token::kProgram);
+  eat(Token::kVar);
+  eat(Token::kSemi);
   auto com = compoundStatement();
   eat(Token::kDot);
   return com;

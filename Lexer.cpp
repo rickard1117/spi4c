@@ -81,10 +81,17 @@ bool Lexer::parseString(Token *t) {
     advance(3);
     t->type_ = Token::Type::kEnd;
     return true;
+  } else if (std::string_view(&text_[idx_], 7) == "PROGRAM") {
+    advance(7);
+    t->type_ = Token::Type::kProgram;
+    return true;
   }
 
   std::size_t end = idx_;
-  while (end < text_.length() && isLetter(text_[end])) {
+  if (!isLetter(text_[end])) {
+    return false;
+  }
+  while (end < text_.length() && (isLetter(text_[end]) || isNum(text_[end]))) {
     end++;
   }
   t->type_ = Token::Type::kVar;
