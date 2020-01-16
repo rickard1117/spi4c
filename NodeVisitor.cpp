@@ -33,13 +33,9 @@ int NodeVisitor::visit(const UnaryOp &op) {
   }
 }
 
-int NodeVisitor::visit(const Var &var) {
-  currentVar_ = var.id_;
-  return 0;
-}
+int NodeVisitor::visit(const Var &var) { return varsTable_[var.id_]; }
 
 int NodeVisitor::visit(const Assign &assign) {
-  assign.var_->accept(this);
   varsTable_[assign.var_->id_] = assign.expr_->accept(this);
   return 0;
 }

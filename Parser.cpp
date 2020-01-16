@@ -56,6 +56,13 @@ std::unique_ptr<AST> Parser::factor() {
     advance();
     return std::unique_ptr<AST>(new UnaryOp(type, std::move(factor())));
   }
+
+  if (currentToken_.type() == Token::kVar) {
+    auto var = std::unique_ptr<Var>(new Var(currentToken_.varval()));
+    advance();
+    return var;
+  }
+
   throw "bad factor";
 }
 

@@ -157,17 +157,28 @@ TEST(TestParser, SimpleAssignment) {
   ASSERT_EQ(table["abc"], 3);
 }
 
-TEST(TestParser, MultiAssignCompoundStatementProgram) {
-  const std::string s = "BEGIN abc:=3; def := 4; ghi:= 5 END.";
+std::map<std::string, int> ParserProgram(const std::string &s) {
   Parser p{s};
   auto ast = p.program();
   NodeVisitor visitor;
   ast->accept(&visitor);
-  auto table = visitor.varsTable();
+  return visitor.varsTable();
+}
+
+TEST(TestParser, MultiAssignCompoundStatementProgram) {
+  const std::string s = "BEGIN abc:=3; def := 4; ghi:= 5 END.";
+  auto table = ParserProgram(s);
 
   ASSERT_EQ(table["abc"], 3);
   ASSERT_EQ(table["def"], 4);
   ASSERT_EQ(table["ghi"], 5);
+}
+
+TEST(TestParser, UseDefinedVar) {
+  const std::string s = "BEGIN A := 1; b := A + 2 END.";
+  auto table = ParserProgram(s);
+  ASSERT_EQ(table["A"], 1);
+  ASSERT_EQ(table["b"], 3);
 }
 
 TEST(TestParser, MultiCompoundStatementProgram) {
@@ -181,11 +192,7 @@ TEST(TestParser, MultiCompoundStatementProgram) {
       "def := 4;"
       "ghi:= 5;;"
       "END.";
-  Parser p{s};
-  auto ast = p.program();
-  NodeVisitor visitor;
-  ast->accept(&visitor);
-  auto table = visitor.varsTable();
+  auto table = ParserProgram(s);
 
   ASSERT_EQ(table["abc"], 3);
   ASSERT_EQ(table["def"], 4);
