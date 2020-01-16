@@ -121,12 +121,28 @@ std::unique_ptr<AST> Parser::compoundStatement() {
   return list;
 }
 
+std::unique_ptr<AST> Parser::empty() {
+  return std::unique_ptr<AST>(new NoOp());
+}
+
+std::unique_ptr<AST> Parser::statement() {
+  if (currentToken_.type() == Token::kBegin) {
+    return compoundStatement();
+  }
+
+  if (currentToken_.type() == Token::kVar) {
+    return assignmentStatement();
+  }
+
+  return empty();
+}
+
 std::unique_ptr<AST> Parser::statementList() {
   auto list = std::unique_ptr<Compound>(new Compound());
-  list->add(assignmentStatement());
+  list->add(statement());
   while (currentToken_.type() == Token::kSemi) {
     advance();
-    list->add(assignmentStatement());
+    list->add(statement());
   }
 
   return list;

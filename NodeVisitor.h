@@ -15,6 +15,7 @@ class NodeVisitor {
   int visit(const class Var &);
   int visit(const class Assign &);
   int visit(const class Compound &);
+  int visit(const class NoOp &);
   const std::map<std::string, int> &varsTable() const { return varsTable_; }
 
  private:

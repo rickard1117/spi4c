@@ -126,6 +126,10 @@ class Compound : public AST {
   std::vector<std::unique_ptr<AST>> children_;
 };
 
+class NoOp : public AST {
+ public:
+  virtual int accept(NodeVisitor *visitor) const override;
+};
 }  // namespace Interpreter
 }  // namespace SI
 

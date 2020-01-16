@@ -19,6 +19,8 @@ class Parser {
   std::unique_ptr<AST> compoundStatement();
   std::unique_ptr<AST> statementList();
   std::unique_ptr<AST> program();
+  std::unique_ptr<AST> statement();
+  std::unique_ptr<AST> empty();
 
  private:
   void eat(const Token::Type &t);

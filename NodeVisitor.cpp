@@ -51,5 +51,7 @@ int NodeVisitor::visit(const Compound &com) {
   return 0;
 }
 
+int NodeVisitor::visit(const NoOp &op) { return 0; }
+
 }  // namespace Interpreter
 }  // namespace SI
