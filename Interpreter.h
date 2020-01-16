@@ -7,10 +7,10 @@ namespace SI {
 namespace Interpreter {
 
 class Interpreter {
-  public:
-    int interpret(const std::string &formula) const;
+ public:
+  int interpret(const std::string &formula) const;
 };
-} // namespace Interpreter
-} // namespace SI
+}  // namespace Interpreter
+}  // namespace SI
 
-#endif // INTERPRETER_H_
+#endif  // INTERPRETER_H_
