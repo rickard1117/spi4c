@@ -24,5 +24,9 @@ int Compound::accept(NodeVisitor *visitor) const {
   return visitor->visit(*this);
 }
 int NoOp::accept(NodeVisitor *visitor) const { return visitor->visit(*this); }
+int Block::accept(NodeVisitor *visitor) const { return visitor->visit(*this); }
+int VarDecl::accept(NodeVisitor *visitor) const {
+  return visitor->visit(*this);
+}
 }  // namespace Interpreter
 }  // namespace SI

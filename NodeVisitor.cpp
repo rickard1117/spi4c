@@ -49,5 +49,8 @@ int NodeVisitor::visit(const Compound &com) {
 
 int NodeVisitor::visit(const NoOp &op) { return 0; }
 
+int NodeVisitor::visit(const Block &b) { return 0; }
+
+int NodeVisitor::visit(const VarDecl &vd) { return 0; }
 }  // namespace Interpreter
 }  // namespace SI

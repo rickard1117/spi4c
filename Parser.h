@@ -21,6 +21,8 @@ class Parser {
   std::unique_ptr<AST> program();
   std::unique_ptr<AST> statement();
   std::unique_ptr<AST> empty();
+  std::unique_ptr<AST> block();
+  std::unique_ptr<AST> variableDeclaration();
 
  private:
   void eat(const Token::Type &t);

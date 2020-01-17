@@ -85,6 +85,14 @@ bool Lexer::parseString(Token *t) {
     advance(7);
     t->type_ = Token::Type::kProgram;
     return true;
+  } else if (std::string_view(&text_[idx_], 3) == "VAR") {
+    advance(3);
+    t->type_ = Token::Type::kVardecl;
+    return true;
+  } else if (std::string_view(&text_[idx_], 7) == "INTEGER") {
+    advance(7);
+    t->type_ = Token::Type::kInteger;
+    return true;
   }
 
   std::size_t end = idx_;
@@ -122,6 +130,9 @@ Token Lexer::getNextToken() {
       if (parseAssign(&t)) {
         return t;
       }
+      t.type_ = Token::Type::kColon;
+      advance();
+      return t;
     case '+':
       t.type_ = Token::Type::kPlus;
       advance();

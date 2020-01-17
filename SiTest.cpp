@@ -34,6 +34,12 @@ TEST(Lexer, TestMultiCharNum) {
   ASSERT_EQ(t.value(), 223);
 }
 
+// TEST(Lexer, TestRealNum) {
+//   Lexer l{"123.456"};
+//   auto t = l.getNextToken();
+
+// }
+
 TEST(Lexer, TestSingleOp) {
   Lexer l{"*"};
   ASSERT_EQ(l.getNextToken().type(), Token::Type::kMul);
@@ -201,6 +207,15 @@ TEST(TestParser, MultiCompoundStatementProgram) {
   ASSERT_EQ(table["xxx"], 123);
   ASSERT_EQ(table["yyy"], 234);
 }
+
+// TEST(TestParser, TestOneIntVarDeclarationsBlock) {
+//   const std::string s = "VAR number : INTEGER;";
+//   Parser p{s};
+//   auto ast = p.variableDeclaration();
+//   NodeVisitor visitor;
+//   ast->accept(&visitor);
+//   // auto table visitor.varsTable();
+// }
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

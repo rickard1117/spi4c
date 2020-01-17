@@ -9,6 +9,7 @@ namespace Interpreter {
 
 void Parser::eat(const Token::Type &t) {
   if (currentToken_.type() != t) {
+    std::cerr << "except " << t << " but got " << currentToken_.type() << '\n';
     throw "bad factor";
   }
   advance();
@@ -154,6 +155,28 @@ std::unique_ptr<AST> Parser::statementList() {
   }
 
   return list;
+}
+
+std::unique_ptr<AST> Parser::block() {
+  eat(Token::kVardecl);
+  auto block = std::make_unique<Block>();
+  block->add(variableDeclaration());
+  eat(Token::kSemi);
+  while (currentToken_.type() == Token::kVar) {
+    block->add(variableDeclaration());
+    eat(Token::kSemi);
+  }
+  block->add(std::move(compoundStatement()));
+  return block;
+}
+
+std::unique_ptr<AST> Parser::variableDeclaration() {
+  assert(currentToken_.type() == Token::kVar);
+  std::string id = currentToken_.varval();
+  eat(Token::kVar);
+  eat(Token::kColon);
+  eat(Token::kInteger);
+  return std::make_unique<VarDecl>(id, VarDecl::kInteger);
 }
 
 }  // namespace Interpreter

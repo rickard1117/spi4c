@@ -19,22 +19,25 @@ class Token : public AST {
   Token() : type_(kNull), value_(0) {}
   enum Type {
     kEof = 0,
-    kNull,
-    kSpace,
-    kPlus,
-    kMinus,
-    kMul,
-    kDiv,
-    kLparent,
-    kRparent,
-    kNum,
-    kBegin,
-    kEnd,
-    kDot,     // .
-    kAssign,  // :=
-    kVar,
-    kSemi,  // ;
-    kProgram, // PROGRAM
+    kNull = 1,
+    kSpace = 2,
+    kPlus = 3,
+    kMinus = 4,
+    kMul = 5,
+    kDiv = 6,
+    kLparent = 7,
+    kRparent = 8,
+    kNum = 9,
+    kBegin = 10,
+    kEnd = 11,
+    kDot = 12,     // .
+    kAssign = 13,  // :=
+    kVar = 14,
+    kSemi = 15,     // ;
+    kProgram = 16,  // PROGRAM
+    kVardecl = 17,  // VAR
+    kColon = 18,    // :
+    kInteger = 19,  // INTEGER
   };
   Type type() const { return type_; }
   int value() const { return value_; }
@@ -130,6 +133,31 @@ class Compound : public AST {
 class NoOp : public AST {
  public:
   virtual int accept(NodeVisitor *visitor) const override;
+};
+
+class VarDecl : public AST {
+ public:
+  enum Type {
+    kInteger = 0,
+  };
+  VarDecl(const std::string &id, VarDecl::Type type) : id_(id), type_(type) {}
+  virtual int accept(NodeVisitor *visitor) const override;
+
+ private:
+  std::string id_;
+  Type type_;
+};
+
+class Block : public AST {
+ public:
+  virtual int accept(NodeVisitor *visitor) const override;
+  void add(std::unique_ptr<AST> compound) {
+    children_.push_back(std::move(compound));
+  }
+
+ private:
+  friend class NodeVisitor;
+  std::vector<std::unique_ptr<AST>> children_;
 };
 }  // namespace Interpreter
 }  // namespace SI
