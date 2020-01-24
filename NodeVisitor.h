@@ -2,6 +2,7 @@
 #define NODE_VISITOR_H__
 
 #include <map>
+#include <string>
 
 namespace SI {
 namespace Interpreter {

@@ -55,7 +55,7 @@ std::unique_ptr<AST> Parser::factor() {
       currentToken_.type() == Token::kMinus) {
     auto type = currentToken_.type();
     advance();
-    return std::make_unique<UnaryOp>(type, std::move(factor()));
+    return std::make_unique<UnaryOp>(type, factor());
   }
 
   if (currentToken_.type() == Token::kVar) {
@@ -166,7 +166,7 @@ std::unique_ptr<AST> Parser::block() {
     block->add(variableDeclaration());
     eat(Token::kSemi);
   }
-  block->add(std::move(compoundStatement()));
+  block->add(compoundStatement());
   return block;
 }
 

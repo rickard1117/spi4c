@@ -11,6 +11,7 @@ namespace Interpreter {
 class NodeVisitor;
 class AST {
  public:
+  virtual ~AST() = default;
   virtual int accept(NodeVisitor *visitor) const = 0;
 };
 
