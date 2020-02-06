@@ -5,28 +5,55 @@
 namespace SI {
 namespace Interpreter {
 
-int NodeVisitor::visit(const Token &t) { return t.value_; }
+// Num NodeVisitor::visitBinOp(const AST &ast) {
+//   switch (ast.type()) {
+//     case TokenTypes::kPlus:
+//     case TokenTypes::kMinus:
+//     case TokenTypes::kMul:
+//     case TokenTypes::kDiv:
+//   }
+// }
 
-int NodeVisitor::visit(const Num &n) { return n.value_; }
-
-int NodeVisitor::visit(const BinOp &op) {
-  if (op.type_ == Token::kPlus) {
-    return op.left_->accept(this) + op.right_->accept(this);
-  } else if (op.type_ == Token::kMinus) {
-    return op.left_->accept(this) - op.right_->accept(this);
-  } else if (op.type_ == Token::kMul) {
-    return op.left_->accept(this) * op.right_->accept(this);
-  } else if (op.type_ == Token::kDiv) {
-    return op.left_->accept(this) / op.right_->accept(this);
-  } else {
-    throw "bad visit";
+Num NodeVisitor::visit(const AST &ast) { 
+  // return t.value_; 
+  switch (ast.type()) {
+    case TokenTypes::kPlus:
+      return visit(ast.at(0)) + visit(ast.at(1));
+    case TokenTypes::kMinus:
+      return visit(ast.at(0)) - visit(ast.at(1));
+    case TokenTypes::kMul:
+      return visit(ast.at(0)) * visit(ast.at(1));
+    case TokenTypes::kDiv:
+      return visit(ast.at(0)) / visit(ast.at(1));
+    case TokenTypes::kIngeter:
+      return Num(ast.token_.intval());
+    case TokenTypes::kReal:
+      return Num(ast.token_.realval());
+    case TokenTypes::k
   }
+
 }
 
+// int NodeVisitor::visit(const Num &n) { return n.value_; }
+
+// int NodeVisitor::visit(const BinOp &op) {
+//   if (op.type_ == TokenTypes::kPlus) {
+//     return op.left_->accept(this) + op.right_->accept(this);
+//   } else if (op.type_ == TokenTypes::kMinus) {
+//     return op.left_->accept(this) - op.right_->accept(this);
+//   } else if (op.type_ == TokenTypes::kMul) {
+//     return op.left_->accept(this) * op.right_->accept(this);
+//   } else if (op.type_ == TokenTypes::kDiv) {
+//     return op.left_->accept(this) / op.right_->accept(this);
+//   } else {
+//     throw "bad visit";
+//   }
+// }
+
 int NodeVisitor::visit(const UnaryOp &op) {
-  if (op.type_ == Token::kPlus) {
+  if (op.type_ == TokenTypes::kPlus) {
     return op.child_->accept(this);
-  } else if (op.type_ == Token::kMinus) {
+  } else if (op.type_ == TokenTypes::kMinus) {
     return op.child_->accept(this) * (-1);
   } else {
     throw "bad visit";

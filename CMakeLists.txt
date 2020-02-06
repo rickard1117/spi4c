@@ -13,7 +13,7 @@ set(CMAKE_CXX_FLAGS "-std=gnu++17 -g -O2 -Wall -Wno-deprecated")
 include_directories(${GTEST_DIR_INC} ${GMOCK_DIR_INC})
 link_directories(${GTEST_DIR_LIB})
 
-set(SRC_FILES AST.h AST.cpp Interpreter.h Interpreter.cpp Lexer.h Lexer.cpp NodeVisitor.h NodeVisitor.cpp Parser.h Parser.cpp)
+set(SRC_FILES AST.h AST.cpp Interpreter.h Interpreter.cpp Lexer.h Lexer.cpp NodeVisitor.h NodeVisitor.cpp Parser.h Parser.cpp Visitor.h)
 set(TEST_FILES SiTest.cpp)
 
 add_executable(test ${SRC_FILES} SiTest.cpp)

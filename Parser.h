@@ -6,6 +6,7 @@
 
 #include "AST.h"
 #include "Lexer.h"
+#include "Token.h"
 
 namespace SI {
 namespace Interpreter {

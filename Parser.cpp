@@ -7,7 +7,7 @@
 namespace SI {
 namespace Interpreter {
 
-void Parser::eat(const Token::Type &t) {
+void Parser::eat(const TokenTypes::Type &t) {
   if (currentToken_.type() != t) {
     std::cerr << "except " << t << " but got " << currentToken_.type() << '\n';
     throw "bad factor";
@@ -16,15 +16,15 @@ void Parser::eat(const Token::Type &t) {
 }
 
 int Parser::caculate(int num, const Token &op, const Token &token) const {
-  if (op.type() == Token::kPlus) {
+  if (op.type() == TokenTypes::kPlus) {
     num += token.value();
-  } else if (op.type() == Token::kMinus) {
+  } else if (op.type() == TokenTypes::kMinus) {
     num -= token.value();
-  } else if (op.type() == Token::kMul) {
+  } else if (op.type() == TokenTypes::kMul) {
     num *= token.value();
-  } else if (op.type() == Token::kDiv) {
+  } else if (op.type() == TokenTypes::kDiv) {
     num /= token.value();
-  } else if (op.type() == Token::kEof) {
+  } else if (op.type() == TokenTypes::kEof) {
     return num;
   } else {
     assert(0);
@@ -38,28 +38,30 @@ Parser::Parser(const std::string &formula) {
 }
 
 std::unique_ptr<AST> Parser::factor() {
-  if (currentToken_.type() == Token::kNum) {
-    std::unique_ptr<AST> num = std::make_unique<Num>(currentToken_.value());
+  if (currentToken_.type() == TokenTypes::kNum) {
+    auto ast = std::make_unique<AST>(currentToken_);
     advance();
-    return num;
-  }
-
-  if (currentToken_.type() == Token::kLparent) {
-    advance();
-    auto ast = expr();
-    eat(Token::kRparent);
     return ast;
   }
 
-  if (currentToken_.type() == Token::kPlus ||
-      currentToken_.type() == Token::kMinus) {
-    auto type = currentToken_.type();
+  if (currentToken_.type() == TokenTypes::kLparent) {
     advance();
-    return std::make_unique<UnaryOp>(type, factor());
+    auto ast = expr();
+    eat(TokenTypes::kRparent);
+    return ast;
   }
 
-  if (currentToken_.type() == Token::kVar) {
-    auto var = std::unique_ptr<Var>(new Var(currentToken_.varval()));
+  if (currentToken_.type() == TokenTypes::kPlus ||
+      currentToken_.type() == TokenTypes::kMinus) {
+    auto type = currentToken_.type();
+    advance();
+    auto ast = std::make_unique<AST>(currentToken_);
+    ast->add(factor());
+    return ast;
+  }
+
+  if (currentToken_.type() == TokenTypes::kVar) {
+    auto ast = std::make_unique<AST>(currentToken_)
     advance();
     return var;
   }
@@ -69,77 +71,109 @@ std::unique_ptr<AST> Parser::factor() {
 
 std::unique_ptr<AST> Parser::term() {
   auto left = factor();
-  while (currentToken_.type() != Token::kEof) {
-    if (currentToken_.type() == Token::kMul) {
-      advance();
-      auto right = factor();
-      left.reset(new BinOp(Token::kMul, std::move(left), std::move(right)));
-    } else if (currentToken_.type() == Token::kDiv) {
-      advance();
-      auto right = factor();
-      left.reset(new BinOp(Token::kDiv, std::move(left), std::move(right)));
-    } else {
+  while (currentToken_.type() != TokenTypes::kEof) {
+    if (currentToken_.type() != TokenTypes::kMul && currentToken_.type() != TokenTypes::kDiv) {
       break;
     }
+    auto root = std::make_unique<AST>(currentToken_);
+    eat(currentToken_.type());
+    auto right = factor();
+    root->add(std::move(left));
+    root->add(std::move(right));
+    left = std::move(root);
+
+    // if (currentToken_.type() == TokenTypes::kMul) {
+    //   advance();
+    //   auto right = factor();
+    //   left.reset(new BinOp(TokenTypes::kMul, std::move(left), std::move(right)));
+    // } else if (currentToken_.type() == TokenTypes::kDiv) {
+    //   advance();
+    //   auto right = factor();
+    //   left.reset(new BinOp(TokenTypes::kDiv, std::move(left), std::move(right)));
+    // } else {
+    //   break;
+    // }
   }
   return left;
 }
 
 std::unique_ptr<AST> Parser::expr() {
   auto left = term();
-  while (currentToken_.type() != Token::kEof) {
-    if (currentToken_.type() == Token::kPlus) {
-      advance();
-      auto right = term();
-      left.reset(new BinOp(Token::kPlus, std::move(left), std::move(right)));
-    } else if (currentToken_.type() == Token::kMinus) {
-      advance();
-      auto right = term();
-      left.reset(new BinOp(Token::kMinus, std::move(left), std::move(right)));
-    } else {
+  while (currentToken_.type() != TokenTypes::kEof) {
+    if (currentToken_.type() != TokenTypes::kPlus && currentToken_.type() != TokenTypes::kMinus) {
       break;
     }
+    auto root = std::make_unique<AST>(currentToken_);
+    eat(currentToken_.type());
+    auto right = factor();
+    root->add(std::move(left));
+    root->add(std::move(right));
+    left = std::move(root);
   }
+  return left;
+
+
+
+  // while (currentToken_.type() != TokenTypes::kEof) {
+
+  //   if (currentToken_.type() == TokenTypes::kPlus) {
+  //     advance();
+  //     auto right = term();
+  //     left.reset(new BinOp(TokenTypes::kPlus, std::move(left), std::move(right)));
+  //   } else if (currentToken_.type() == TokenTypes::kMinus) {
+  //     advance();
+  //     auto right = term();
+  //     left.reset(new BinOp(TokenTypes::kMinus, std::move(left), std::move(right)));
+  //   } else {
+  //     break;
+  //   }
+  // }
 
   return left;
 }
 
 std::unique_ptr<AST> Parser::assignmentStatement() {
-  if (currentToken_.type() != Token::kVar) {
+  if (currentToken_.type() != TokenTypes::kVar) {
     throw "bad factor";
   }
 
-  auto var = std::make_unique<Var>(currentToken_.varval());
-  advance();
-  eat(Token::kAssign);
+  // auto var = std::make_unique<Var>(currentToken_.varval());
+  auto var = std::makd_unique<AST>(currentToken_);
+  // advance();
+  eat(currentToken_.type());
+  auto assign = std::make_unique<AST>(currentToken_);
+  eat(TokenTypes::kAssign);
   auto e = expr();
-  return std::make_unique<Assign>(std::move(var), std::move(e));
+  assign->add(std::move(var));
+  assign->add(std::move(e))
+  return assign;
+  // return std::make_unique<Assign>(std::move(var), std::move(e));
 }
 
 std::unique_ptr<AST> Parser::program() {
-  eat(Token::kProgram);
-  eat(Token::kVar);
-  eat(Token::kSemi);
+  eat(TokenTypes::kProgram);
+  eat(TokenTypes::kVar);
+  eat(TokenTypes::kSemi);
   auto com = compoundStatement();
-  eat(Token::kDot);
+  eat(TokenTypes::kDot);
   return com;
 }
 
 std::unique_ptr<AST> Parser::compoundStatement() {
-  eat(Token::kBegin);
+  eat(TokenTypes::kBegin);
   auto list = statementList();
-  eat(Token::kEnd);
+  eat(TokenTypes::kEnd);
   return list;
 }
 
-std::unique_ptr<AST> Parser::empty() { return std::make_unique<NoOp>(); }
+std::unique_ptr<AST> Parser::empty() { return std::make_unique<AST>(); }
 
 std::unique_ptr<AST> Parser::statement() {
-  if (currentToken_.type() == Token::kBegin) {
+  if (currentToken_.type() == TokenTypes::kBegin) {
     return compoundStatement();
   }
 
-  if (currentToken_.type() == Token::kVar) {
+  if (currentToken_.type() == TokenTypes::kVar) {
     return assignmentStatement();
   }
 
@@ -147,9 +181,10 @@ std::unique_ptr<AST> Parser::statement() {
 }
 
 std::unique_ptr<AST> Parser::statementList() {
-  auto list = std::make_unique<Compound>();
+  auto com = Token(TyokenTypes::kCompound);
+  auto list = std::make_unique<AST>(com);
   list->add(statement());
-  while (currentToken_.type() == Token::kSemi) {
+  while (currentToken_.type() == TokenTypes::kSemi) {
     advance();
     list->add(statement());
   }
@@ -158,25 +193,26 @@ std::unique_ptr<AST> Parser::statementList() {
 }
 
 std::unique_ptr<AST> Parser::block() {
-  eat(Token::kVardecl);
-  auto block = std::make_unique<Block>();
+  eat(TokenTypes::kVardecl);
+  // auto block = std::make_unique<Block>();
+  auto block =  std::make_unique<AST>(TokenTypes::kBlock);
   block->add(variableDeclaration());
-  eat(Token::kSemi);
-  while (currentToken_.type() == Token::kVar) {
+  eat(TokenTypes::kSemi);
+  while (currentToken_.type() == TokenTypes::kVar) {
     block->add(variableDeclaration());
-    eat(Token::kSemi);
+    eat(TokenTypes::kSemi);
   }
   block->add(compoundStatement());
   return block;
 }
 
 std::unique_ptr<AST> Parser::variableDeclaration() {
-  assert(currentToken_.type() == Token::kVar);
+  assert(currentToken_.type() == TokenTypes::kVar);
   std::string id = currentToken_.varval();
-  eat(Token::kVar);
-  eat(Token::kColon);
-  eat(Token::kInteger);
-  return std::make_unique<VarDecl>(id, VarDecl::kInteger);
+  eat(TokenTypes::kVar);
+  eat(TokenTypes::kColon);
+  eat(TokenTypes::kInteger);
+  return std::make_unique<AST>(id, VarDecl::kInteger);
 }
 
 }  // namespace Interpreter
