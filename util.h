@@ -1,29 +1,28 @@
 #ifndef SI_UTIL_H__
 #define SI_UTIL_H__
 
-#include <string.h>
-
-#include <string>
+#include <cstdlib>
+#include <iostream>
 
 namespace SI {
 namespace util {
 
-class StringPiece {
- public:
-  StringPiece(const char *start, std::size_t len) : str_(start), len_(len) {}
-  StringPiece(const char *start) : str_(start), len_(strlen(start)) {}
-  bool empty() const { return len_ == 0; }
+#define SI_ASSERT_MSG(expr, msg) __ASSERT(#expr, expr, __FILE__, __LINE__, msg)
+#define SI_ASSERT(expr) __ASSERT(#expr, expr, __FILE__, __LINE__)
 
-  std::size_t length() const { return len_; }
+// #define GetMacro(_1, _2, NAME, ...) NAME
+// #define ASSERT(...) GetMacro(__VA_ARGS__, __ASSERT, __ASSERT,
+// ...)(__VA_ARGS__)
 
-  bool equal(const char *str) const {
-    return strncmp(str_, str, strlen(str)) == 0;
+void __ASSERT(const char *str, bool expr, const char *file, int line,
+              const char *msg = "") {
+  if (!expr) {
+    std::cerr << "Assert failed:\t" << msg << "\n"
+              << "Expected:\t" << str << "\n"
+              << "Source:\t\t" << file << ", line " << line << "\n";
+    std::abort();
   }
-
- private:
-  const char *str_;
-  std::size_t len_;
-};
+}
 
 }  // namespace util
 }  // namespace SI

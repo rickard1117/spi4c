@@ -1,32 +1,17 @@
 
 #include "AST.h"
 
-#include "NodeVisitor.h"
+namespace SI {
+namespace Interpreter {
 
-// namespace SI {
-// namespace Interpreter {
-
-// int Token::accept(NodeVisitor *visitor) const { return visitor->visit(*this); }
-
-// int Num::accept(NodeVisitor *visitor) const { return visitor->visit(*this); }
-
-// int BinOp::accept(NodeVisitor *visitor) const { return visitor->visit(*this); }
-
-// int UnaryOp::accept(NodeVisitor *visitor) const {
-//   return visitor->visit(*this);
-// }
-
-// int Var::accept(NodeVisitor *visitor) const { return visitor->visit(*this); }
-
-// int Assign::accept(NodeVisitor *visitor) const { return visitor->visit(*this); }
-
-// int Compound::accept(NodeVisitor *visitor) const {
-//   return visitor->visit(*this);
-// }
-// int NoOp::accept(NodeVisitor *visitor) const { return visitor->visit(*this); }
-// int Block::accept(NodeVisitor *visitor) const { return visitor->visit(*this); }
-// int VarDecl::accept(NodeVisitor *visitor) const {
-//   return visitor->visit(*this);
-// }
-// }  // namespace Interpreter
-// }  // namespace SI
+void ASTNode::addStatement(std::unique_ptr<ASTNode> stmt) {
+  if (stmt->empty()) {
+    return;
+  }
+  if (compounds_ == nullptr) {
+    compounds_ = std::make_unique<std::vector<std::unique_ptr<ASTNode>>>();
+  }
+  compounds_->push_back(std::move(stmt));
+}
+}  // namespace Interpreter
+}  // namespace SI

@@ -1,8 +1,7 @@
 #include "Lexer.h"
 
-#include <string_view>
-
 #include "assert.h"
+#include "ctype.h"
 
 namespace SI {
 namespace Interpreter {
@@ -20,161 +19,93 @@ void Lexer::skipSpaces() {
   }
 }
 
-bool Lexer::parseNum(Token *t) {
-  assert(isNum(current()));
-  std::size_t end = idx_ + 1;
-  while (isNum(text_[end]) && end < text_.length()) {
-    end++;
-  }
-  // FIXME : substr性能问题？
-  t->type_ = Token::Type::kNum;
-  t->value_ = std::stoi(text_.substr(idx_, end - idx_));
-  idx_ = end;
-  return true;
+void Lexer::back(int step) {
+  idx_ -= step;
+  assert(idx_ >= 0);
 }
 
-bool Lexer::parseBegin() {
-  std::size_t end = idx_ + 5;
-  if (text_.length() < end || std::string_view(&text_[idx_], 5) != "BEGIN") {
-    return false;
-  }
-  idx_ = end;
-  return true;
-}
-
-bool Lexer::parseEnd() {
-  std::size_t end = idx_ + 3;
-  if (text_.length() < end || std::string_view(&text_[idx_], 3) != "END") {
-    return false;
-  }
-  idx_ = end;
-  return true;
-}
-
-bool Lexer::parseAssign(Token *t) {
-  std::size_t end = idx_ + 2;
-  if (text_.length() < end || std::string_view(&text_[idx_], 2) != ":=") {
-    return false;
-  }
-  idx_ = end;
-  t->type_ = Token::Type::kAssign;
-  return true;
-}
-
-std::string Lexer::parseVar() {
-  std::size_t end = idx_;
-  while (end < text_.length() && isLetter(text_[end])) {
-    end++;
-  }
-  auto var = text_.substr(idx_, end - idx_);
-  idx_ = end;
-  return var;
-}
-
-bool Lexer::parseString(Token *t) {
-  assert(isLetter(current()));
-  if (std::string_view(&text_[idx_], 5) == "BEGIN") {
-    advance(5);
-    t->type_ = Token::Type::kBegin;
-    return true;
-  } else if (std::string_view(&text_[idx_], 3) == "END") {
-    advance(3);
-    t->type_ = Token::Type::kEnd;
-    return true;
-  } else if (std::string_view(&text_[idx_], 7) == "PROGRAM") {
-    advance(7);
-    t->type_ = Token::Type::kProgram;
-    return true;
-  } else if (std::string_view(&text_[idx_], 3) == "VAR") {
-    advance(3);
-    t->type_ = Token::Type::kVardecl;
-    return true;
-  } else if (std::string_view(&text_[idx_], 7) == "INTEGER") {
-    advance(7);
-    t->type_ = Token::Type::kInteger;
+bool Lexer::next(char expect) {
+  auto c = readc();
+  if (c == expect) {
     return true;
   }
-
-  std::size_t end = idx_;
-  if (!isLetter(text_[end])) {
-    return false;
-  }
-  while (end < text_.length() && (isLetter(text_[end]) || isNum(text_[end]))) {
-    end++;
-  }
-  t->type_ = Token::Type::kVar;
-  t->varval_ = text_.substr(idx_, end - idx_);
-  idx_ = end;
-  return true;
+  back();
+  return false;
 }
 
-Token Lexer::getNextToken() {
-  Token t;
+std::unique_ptr<Token> Lexer::read_number(char c) {
+  assert(isdigit(c));
+  auto token = std::make_unique<Token>(TokenType::kNumber, TokenId::kNull);
+  auto &val = token->val();
+  while (isdigit(c)) {
+    val.push_back(c);
+    c = readc();
+  }
+  back();
+  return token;
+}
 
+std::unique_ptr<Token> Lexer::make_keyword(TokenId id) {
+  return std::make_unique<Token>(TokenType::kKeyword, id);
+}
+
+std::unique_ptr<Token> Lexer::read_rep(char expect, TokenId id, TokenId els) {
+  return make_keyword(next(expect) ? id : els);
+}
+
+char Lexer::readc() {
+  auto c = current();
+  advance();
+  return c;
+}
+
+std::unique_ptr<Token> Lexer::read_ident(char c) {
+  assert(isalpha(c));
+  auto token = std::make_unique<Token>(TokenType::kId, TokenId::kNull);
+  auto &val = token->val();
+  while (isalpha(c)) {
+    val.push_back(c);
+    c = readc();
+  }
+  back();
+  return token;
+}
+
+std::unique_ptr<Token> Lexer::getNextToken() {
   skipSpaces();
+  auto c = readc();
 
-  if (current() == '\0') {
-    t.type_ = Token::Type::kEof;
-    return t;
-  }
-
-  switch (current()) {
+  switch (c) {
     case '\0':
-      t.type_ = Token::Type::kEof;
-      return t;
+      return std::make_unique<Token>(TokenType::kEof, TokenId::kNull);
     case '0' ... '9':
-      if (parseNum(&t)) {
-        return t;
-      }
+      return read_number(c);
     case ':':
-      if (parseAssign(&t)) {
-        return t;
-      }
-      t.type_ = Token::Type::kColon;
-      advance();
-      return t;
+      return read_rep('=', TokenId::kAssign, TokenId::kColon);
     case '+':
-      t.type_ = Token::Type::kPlus;
-      advance();
-      return t;
+      return read_rep('+', TokenId::kInc, TokenId::kPlus);
     case '-':
-      t.type_ = Token::Type::kMinus;
-      advance();
-      return t;
+      return read_rep('+', TokenId::kDec, TokenId::kMinus);
     case '*':
-      t.type_ = Token::Type::kMul;
-      advance();
-      return t;
+      return make_keyword(TokenId::kStar);
     case '/':
-      t.type_ = Token::Type::kDiv;
-      advance();
-      return t;
+      return make_keyword(TokenId::kSlash);
     case '(':
-      t.type_ = Token::Type::kLparent;
-      advance();
-      return t;
+      return make_keyword(TokenId::kLparent);
     case ')':
-      t.type_ = Token::Type::kRparent;
-      advance();
-      return t;
+      return make_keyword(TokenId::kRparent);
     case '.':
-      t.type_ = Token::Type::kDot;
-      advance();
-      return t;
+      return make_keyword(TokenId::kDot);
     case ';':
-      t.type_ = Token::Type::kSemi;
-      advance();
-      return t;
+      return make_keyword(TokenId::kSemi);
     case 'a' ... 'z':
     case 'A' ... 'Z':
-      if (parseString(&t)) {
-        return t;
-      }
+      return read_ident(c);
     default:
       throw "bad token";
   }
   assert(0);
-  return t;
+  // return t;
 }
 
 }  // namespace Interpreter

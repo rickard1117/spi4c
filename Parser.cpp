@@ -2,218 +2,244 @@
 
 #include <assert.h>
 
-#include <iostream>
+#include "AST.h"
 
 namespace SI {
 namespace Interpreter {
 
-void Parser::eat(const TokenTypes::Type &t) {
-  if (currentToken_.type() != t) {
-    std::cerr << "except " << t << " but got " << currentToken_.type() << '\n';
-    throw "bad factor";
-  }
-  advance();
+Parser::Parser(const std::string &formula) { lexer_.init(formula); }
+
+std::unique_ptr<ASTNode> Parser::astInt(long num) const {
+  auto ast = std::make_unique<ASTNode>(ASTNodeType::kInt);
+  ast->setLong(num);
+  return ast;
+};
+
+std::unique_ptr<ASTNode> Parser::readNumber(const Token &tok) const {
+  assert(tok.type() == TokenType::kNumber);
+  return astInt(std::stol(tok.val()));
 }
 
-int Parser::caculate(int num, const Token &op, const Token &token) const {
-  if (op.type() == TokenTypes::kPlus) {
-    num += token.value();
-  } else if (op.type() == TokenTypes::kMinus) {
-    num -= token.value();
-  } else if (op.type() == TokenTypes::kMul) {
-    num *= token.value();
-  } else if (op.type() == TokenTypes::kDiv) {
-    num /= token.value();
-  } else if (op.type() == TokenTypes::kEof) {
-    return num;
-  } else {
-    assert(0);
-  }
-  return num;
+std::unique_ptr<ASTNode> Parser::astUnary(
+    ASTNodeType type, std::unique_ptr<ASTNode> operand) const {
+  auto ast = std::make_unique<ASTNode>(type);
+  ast->setOperand(std::move(operand));
+  return ast;
 }
 
-Parser::Parser(const std::string &formula) {
-  lexer_.init(formula);
-  advance();
+void Parser::eatKeyword(TokenId expect) {
+  auto tok = readToken();
+  if (tok->type() != TokenType::kKeyword || tok->id() != expect) {
+    throw "unexpect keyword";
+  }
 }
 
-std::unique_ptr<AST> Parser::factor() {
-  if (currentToken_.type() == TokenTypes::kNum) {
-    auto ast = std::make_unique<AST>(currentToken_);
-    advance();
-    return ast;
-  }
+std::unique_ptr<ASTNode> Parser::factor() {
+  auto tok = readToken();
+  switch (tok->type()) {
+    case TokenType::kNumber:
+      return readNumber(*tok);
+    case TokenType::kKeyword: {
+      switch (tok->id()) {
+        case TokenId::kPlus:
+          return astUnary(ASTNodeType::kUnaryOpPlus, factor());
+        case TokenId::kMinus:
+          return astUnary(ASTNodeType::kUnaryOpMinus, factor());
+        case TokenId::kLparent: {
+          auto ast = expr();
+          eatKeyword(TokenId::kRparent);
+          return ast;
+        }
+        default:
+          throw "bad token id";
+      }
+    }
 
-  if (currentToken_.type() == TokenTypes::kLparent) {
-    advance();
-    auto ast = expr();
-    eat(TokenTypes::kRparent);
-    return ast;
+    default:
+      throw "bad factor";
   }
-
-  if (currentToken_.type() == TokenTypes::kPlus ||
-      currentToken_.type() == TokenTypes::kMinus) {
-    auto type = currentToken_.type();
-    advance();
-    auto ast = std::make_unique<AST>(currentToken_);
-    ast->add(factor());
-    return ast;
-  }
-
-  if (currentToken_.type() == TokenTypes::kVar) {
-    auto ast = std::make_unique<AST>(currentToken_)
-    advance();
-    return var;
-  }
-
-  throw "bad factor";
+  assert(0);
 }
 
-std::unique_ptr<AST> Parser::term() {
+std::unique_ptr<Token> Parser::readToken() {
+  if (peekToken_.has_value()) {
+    auto tok = std::move(peekToken_.value());
+    peekToken_ = std::nullopt;
+    return tok;
+  }
+  return lexer_.getNextToken();
+}
+
+const Token *Parser::peekToken() {
+  if (!peekToken_.has_value()) {
+    peekToken_ = lexer_.getNextToken();
+  }
+  return peekToken_.value().get();
+}
+
+void Parser::eatToken() {
+  assert(peekToken_.has_value());
+  peekToken_ = std::nullopt;
+}
+
+std::unique_ptr<ASTNode> Parser::astBinOp(
+    ASTNodeType type, std::unique_ptr<ASTNode> left,
+    std::unique_ptr<ASTNode> right) const {
+  auto ast = std::make_unique<ASTNode>(type);
+  ast->setLeft(std::move(left));
+  ast->setRight(std::move(right));
+  return ast;
+}
+
+std::unique_ptr<ASTNode> Parser::term() {
   auto left = factor();
-  while (currentToken_.type() != TokenTypes::kEof) {
-    if (currentToken_.type() != TokenTypes::kMul && currentToken_.type() != TokenTypes::kDiv) {
-      break;
-    }
-    auto root = std::make_unique<AST>(currentToken_);
-    eat(currentToken_.type());
-    auto right = factor();
-    root->add(std::move(left));
-    root->add(std::move(right));
-    left = std::move(root);
 
-    // if (currentToken_.type() == TokenTypes::kMul) {
-    //   advance();
-    //   auto right = factor();
-    //   left.reset(new BinOp(TokenTypes::kMul, std::move(left), std::move(right)));
-    // } else if (currentToken_.type() == TokenTypes::kDiv) {
-    //   advance();
-    //   auto right = factor();
-    //   left.reset(new BinOp(TokenTypes::kDiv, std::move(left), std::move(right)));
-    // } else {
-    //   break;
-    // }
+  const auto *tok = peekToken();
+
+  while (tok->type() == TokenType::kKeyword) {
+    if (tok->id() == TokenId::kStar) {
+      eatToken();
+      left = astBinOp(ASTNodeType::kMul, std::move(left), factor());
+      tok = peekToken();
+      continue;
+    }
+    if (tok->id() == TokenId::kSlash) {
+      eatToken();
+      left = astBinOp(ASTNodeType::kDiv, std::move(left), factor());
+      tok = peekToken();
+      continue;
+    }
+    break;
   }
   return left;
 }
 
-std::unique_ptr<AST> Parser::expr() {
+std::unique_ptr<ASTNode> Parser::expr() {
   auto left = term();
-  while (currentToken_.type() != TokenTypes::kEof) {
-    if (currentToken_.type() != TokenTypes::kPlus && currentToken_.type() != TokenTypes::kMinus) {
-      break;
+
+  const auto *tok = peekToken();
+
+  while (tok->type() == TokenType::kKeyword) {
+    if (tok->id() == TokenId::kPlus) {
+      eatToken();
+      left = astBinOp(ASTNodeType::kAdd, std::move(left), term());
+      tok = peekToken();
+      continue;
     }
-    auto root = std::make_unique<AST>(currentToken_);
-    eat(currentToken_.type());
-    auto right = factor();
-    root->add(std::move(left));
-    root->add(std::move(right));
-    left = std::move(root);
+    if (tok->id() == TokenId::kMinus) {
+      eatToken();
+      left = astBinOp(ASTNodeType::kSub, std::move(left), term());
+      tok = peekToken();
+      continue;
+    }
+    break;
   }
-  return left;
-
-
-
-  // while (currentToken_.type() != TokenTypes::kEof) {
-
-  //   if (currentToken_.type() == TokenTypes::kPlus) {
-  //     advance();
-  //     auto right = term();
-  //     left.reset(new BinOp(TokenTypes::kPlus, std::move(left), std::move(right)));
-  //   } else if (currentToken_.type() == TokenTypes::kMinus) {
-  //     advance();
-  //     auto right = term();
-  //     left.reset(new BinOp(TokenTypes::kMinus, std::move(left), std::move(right)));
-  //   } else {
-  //     break;
-  //   }
-  // }
-
   return left;
 }
 
-std::unique_ptr<AST> Parser::assignmentStatement() {
-  if (currentToken_.type() != TokenTypes::kVar) {
-    throw "bad factor";
-  }
-
-  // auto var = std::make_unique<Var>(currentToken_.varval());
-  auto var = std::makd_unique<AST>(currentToken_);
-  // advance();
-  eat(currentToken_.type());
-  auto assign = std::make_unique<AST>(currentToken_);
-  eat(TokenTypes::kAssign);
-  auto e = expr();
-  assign->add(std::move(var));
-  assign->add(std::move(e))
-  return assign;
-  // return std::make_unique<Assign>(std::move(var), std::move(e));
+std::unique_ptr<ASTNode> Parser::astVar(const std::string &id) const {
+  auto ast = std::make_unique<ASTNode>(ASTNodeType::kVar);
+  ast->setVar(id);
+  return ast;
 }
 
-std::unique_ptr<AST> Parser::program() {
-  eat(TokenTypes::kProgram);
-  eat(TokenTypes::kVar);
-  eat(TokenTypes::kSemi);
+std::unique_ptr<ASTNode> Parser::astAssignment(
+    std::unique_ptr<ASTNode> var, std::unique_ptr<ASTNode> expr) const {
+  auto ast = std::make_unique<ASTNode>(ASTNodeType::kAssignment);
+  ast->setLeft(std::move(var));
+  ast->setRight(std::move(expr));
+  return ast;
+}
+
+std::unique_ptr<ASTNode> Parser::assignmentStatement() {
+  auto var = readToken();
+
+  if (var->type() != TokenType::kId) {
+    throw "bad assignmentStatement";
+  }
+
+  auto assign = readToken();
+  if (!assign->isKeyword(TokenId::kAssign)) {
+    throw "bad assignmentStatement";
+  }
+
+  return astAssignment(astVar(var->val()), expr());
+}
+
+std::unique_ptr<ASTNode> Parser::program() {
   auto com = compoundStatement();
-  eat(TokenTypes::kDot);
+  eatKeyword(TokenId::kDot);
   return com;
 }
 
-std::unique_ptr<AST> Parser::compoundStatement() {
-  eat(TokenTypes::kBegin);
+std::unique_ptr<ASTNode> Parser::compoundStatement() {
+  eatKeyword(TokenId::kBegin);
   auto list = statementList();
-  eat(TokenTypes::kEnd);
+  eatKeyword(TokenId::kEnd);
   return list;
 }
 
-std::unique_ptr<AST> Parser::empty() { return std::make_unique<AST>(); }
+std::unique_ptr<ASTNode> Parser::astCompound() const {
+  return std::make_unique<ASTNode>(ASTNodeType::kCompound);
+}
 
-std::unique_ptr<AST> Parser::statement() {
-  if (currentToken_.type() == TokenTypes::kBegin) {
+std::unique_ptr<ASTNode> Parser::statementList() {
+  auto stmt = statement();
+  const auto *tok = peekToken();
+  if (!tok->isKeyword(TokenId::kSemi)) {
+    return stmt;
+  }
+
+  auto list = astCompound();
+  list->addStatement(std::move(stmt));
+  while (tok->isKeyword(TokenId::kSemi)) {
+    eatToken();
+    list->addStatement(statement());
+    tok = peekToken();
+  }
+
+  return list;
+}
+
+std::unique_ptr<ASTNode> Parser::empty() {
+  return std::make_unique<ASTNode>(ASTNodeType::kEmpty);
+}
+
+std::unique_ptr<ASTNode> Parser::statement() {
+  auto tok = peekToken();
+  if (tok->isKeyword(TokenId::kBegin)) {
     return compoundStatement();
   }
 
-  if (currentToken_.type() == TokenTypes::kVar) {
+  if (tok->isKeyword(TokenId::kAssign)) {
     return assignmentStatement();
   }
 
   return empty();
 }
 
-std::unique_ptr<AST> Parser::statementList() {
-  auto com = Token(TyokenTypes::kCompound);
-  auto list = std::make_unique<AST>(com);
-  list->add(statement());
-  while (currentToken_.type() == TokenTypes::kSemi) {
-    advance();
-    list->add(statement());
-  }
+// std::unique_ptr<AST> Parser::block() {
+//   eat(TokenTypes::kVardecl);
+//   // auto block = std::make_unique<Block>();
+//   auto block = std::make_unique<AST>(TokenTypes::kBlock);
+//   block->add(variableDeclaration());
+//   eat(TokenTypes::kSemi);
+//   while (currentToken_.type() == TokenTypes::kVar) {
+//     block->add(variableDeclaration());
+//     eat(TokenTypes::kSemi);
+//   }
+//   block->add(compoundStatement());
+//   return block;
+// }
 
-  return list;
-}
-
-std::unique_ptr<AST> Parser::block() {
-  eat(TokenTypes::kVardecl);
-  // auto block = std::make_unique<Block>();
-  auto block =  std::make_unique<AST>(TokenTypes::kBlock);
-  block->add(variableDeclaration());
-  eat(TokenTypes::kSemi);
-  while (currentToken_.type() == TokenTypes::kVar) {
-    block->add(variableDeclaration());
-    eat(TokenTypes::kSemi);
-  }
-  block->add(compoundStatement());
-  return block;
-}
-
-std::unique_ptr<AST> Parser::variableDeclaration() {
-  assert(currentToken_.type() == TokenTypes::kVar);
-  std::string id = currentToken_.varval();
-  eat(TokenTypes::kVar);
-  eat(TokenTypes::kColon);
-  eat(TokenTypes::kInteger);
-  return std::make_unique<AST>(id, VarDecl::kInteger);
-}
+// std::unique_ptr<AST> Parser::variableDeclaration() {
+//   assert(currentToken_.type() == TokenTypes::kVar);
+//   std::string id = currentToken_.varval();
+//   eat(TokenTypes::kVar);
+//   eat(TokenTypes::kColon);
+//   eat(TokenTypes::kInteger);
+//   return std::make_unique<AST>(id, VarDecl::kInteger);
+// }
 
 }  // namespace Interpreter
 }  // namespace SI

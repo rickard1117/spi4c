@@ -2,6 +2,7 @@
 #define PARSER_H_
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "AST.h"
@@ -13,24 +14,38 @@ namespace Interpreter {
 class Parser {
  public:
   Parser(const std::string &formula);
-  std::unique_ptr<AST> expr();
-  std::unique_ptr<AST> term();
-  std::unique_ptr<AST> factor();
-  std::unique_ptr<AST> assignmentStatement();
-  std::unique_ptr<AST> compoundStatement();
-  std::unique_ptr<AST> statementList();
-  std::unique_ptr<AST> program();
-  std::unique_ptr<AST> statement();
-  std::unique_ptr<AST> empty();
-  std::unique_ptr<AST> block();
-  std::unique_ptr<AST> variableDeclaration();
+  std::unique_ptr<ASTNode> expr();
+  std::unique_ptr<ASTNode> term();
+  std::unique_ptr<ASTNode> factor();
+  std::unique_ptr<ASTNode> assignmentStatement();
+  std::unique_ptr<ASTNode> compoundStatement();
+  std::unique_ptr<ASTNode> statementList();
+  std::unique_ptr<ASTNode> program();
+  std::unique_ptr<ASTNode> statement();
+  std::unique_ptr<ASTNode> empty();
+  // std::unique_ptr<ASTNode> block();
+  // std::unique_ptr<ASTNode> variableDeclaration();
 
  private:
-  void eat(const Token::Type &t);
-  int caculate(int num, const Token &op, const Token &t) const;
-  void advance() { currentToken_ = lexer_.getNextToken(); }
+  std::unique_ptr<Token> readToken();
+  const Token *peekToken();
+  void eatToken();
+
+  std::unique_ptr<ASTNode> readNumber(const Token &tok) const;
+
+  std::unique_ptr<ASTNode> astInt(long num) const;
+  std::unique_ptr<ASTNode> astUnary(ASTNodeType type,
+                                    std::unique_ptr<ASTNode> operand) const;
+  std::unique_ptr<ASTNode> astBinOp(ASTNodeType type,
+                                    std::unique_ptr<ASTNode> left,
+                                    std::unique_ptr<ASTNode> right) const;
+  std::unique_ptr<ASTNode> astVar(const std::string &id) const;
+  std::unique_ptr<ASTNode> astAssignment(std::unique_ptr<ASTNode> var,
+                                         std::unique_ptr<ASTNode> expr) const;
+  std::unique_ptr<ASTNode> astCompound() const;
+  void eatKeyword(TokenId expect);
   Lexer lexer_;
-  Token currentToken_;
+  std::optional<std::unique_ptr<Token>> peekToken_;
 };
 }  // namespace Interpreter
 }  // namespace SI

@@ -1,9 +1,11 @@
 #ifndef LEXER_H_
 #define LEXER_H_
 
+#include <memory>
 #include <string>
 
-#include "AST.h"
+#include "Token.h"
+// #include "AST.h"
 
 namespace SI {
 namespace Interpreter {
@@ -13,7 +15,7 @@ class Lexer {
 
   Lexer(const std::string &text) : text_(text), idx_(0) {}
 
-  Token getNextToken();
+  std::unique_ptr<Token> getNextToken();
 
   void init(const std::string &text) {
     text_ = text;
@@ -21,19 +23,18 @@ class Lexer {
   }
 
  private:
-  bool isNum(const char &c) { return '0' <= c && c <= '9'; }
-  bool isLetter(const char &c) {
-    return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
-  }
+  std::unique_ptr<Token> read_number(char c);
+  std::unique_ptr<Token> read_ident(char c);
+  std::unique_ptr<Token> read_rep(char expect, TokenId id, TokenId els);
+  std::unique_ptr<Token> make_keyword(TokenId id);
+
   void skipSpaces();
-  bool parseNum(Token *);
+  char readc();
   char current() const;
+  bool next(char expect);
   void advance(int step = 1) { idx_ += step; }
-  bool parseBegin();
-  bool parseEnd();
-  bool parseAssign(Token *);
-  bool parseString(Token *);
-  std::string parseVar();
+  void back(int step = 1);
+
   std::string text_;
   std::size_t idx_;
 };
