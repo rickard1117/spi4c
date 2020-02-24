@@ -12,59 +12,75 @@ namespace SI {
 namespace Interpreter {
 
 enum class ASTNodeType {
-  kInt = 0,       // 整形
-  kReal,          // 浮点
-  kAdd,           // 加法
-  kSub,           // 减法
-  kMul,           // 乘法
-  kDiv,           // 除法
-  kBinOp,         // 二元运算符
-  kUnaryOpPlus,   // 一元运算符
-  kUnaryOpMinus,  //
+  kInt = 0,
+  kReal,
+  kAdd,
+  kSub,
+  kMul,
+  kDiv,
+  kUnaryOpPlus,
+  kUnaryOpMinus,
   kVar,
   kEmpty,
   kCompound,
   kAssignment,
+  kBlock,
+  kDeclaration,
 };
 
+class ASTNode;
+using ASTNodePtr = std::unique_ptr<ASTNode>;
 class ASTNode {
  public:
-  ASTNode(ASTNodeType type)
-      : type_(type), empty_(type == ASTNodeType::kEmpty) {}
+  ASTNode(ASTNodeType type) : type_(type) {}
 
-  void setLong(long num) { numval_ = num; }
-  void setOperand(std::unique_ptr<ASTNode> operand) {
-    operand_ = std::move(operand);
-  }
-  void setLeft(std::unique_ptr<ASTNode> left) { left_ = std::move(left); }
-  void setRight(std::unique_ptr<ASTNode> right) { right_ = std::move(right); }
+  void setNumber(long num) { numval_ = num; }
+  void setOperand(ASTNodePtr operand) { operand_ = std::move(operand); }
+  void setLeft(ASTNodePtr left) { left_ = std::move(left); }
+  void setRight(ASTNodePtr right) { right_ = std::move(right); }
   void setVar(const std::string &val) { varId_ = val; }
   bool empty() const { return empty_; }
-  void addStatement(std::unique_ptr<ASTNode> stmt);
+  void addCompund(ASTNodePtr com);
+  // void addDecl(ASTNodePtr decls);
+  void setDecls(std::vector<ASTNodePtr> &&decls);
+  void setCompound(ASTNodePtr com);
+  // enum Type {
+
+  // };
 
  private:
   friend class ASTNodeVisitor;
   ASTNodeType type_;
 
+  // std::variant<int, AstAssignment, AstBinaryOp, AstBlock, AstCompound,
+  // AstDeclration,
+  //              AstEmpty, AstNumber, AstUnaryOp, AstVariable>
+  //     imp_;
   // empty
   bool empty_;
 
   // variable
   std::string varId_;
 
-  // int or real
+  // number
   std::variant<long, double> numval_;
 
   // binary op  or assignment
-  std::unique_ptr<ASTNode> left_;
-  std::unique_ptr<ASTNode> right_;
+  ASTNodePtr left_;
+  ASTNodePtr right_;
 
   // unary op
-  std::unique_ptr<ASTNode> operand_;
+  ASTNodePtr operand_;
 
-  // compound
-  std::unique_ptr<std::vector<std::unique_ptr<ASTNode>>> compounds_;
+  // compounds
+  std::unique_ptr<std::vector<ASTNodePtr>> compounds_;
+
+  // declarations
+  std::vector<ASTNodePtr> declarations_;
 };
+
+// using ASTNodePtr = std::unique_ptr<ASTNode>;
+
 }  // namespace Interpreter
 }  // namespace SI
 

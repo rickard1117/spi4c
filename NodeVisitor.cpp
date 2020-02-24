@@ -1,7 +1,5 @@
 #include "NodeVisitor.h"
 
-#include <assert.h>
-
 #include "AST.h"
 #include "util.h"
 

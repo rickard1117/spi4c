@@ -16,24 +16,11 @@ enum class TokenType {
 
 enum class TokenId {
   kNull,
-#define op(name, _) name
-  op(kPlus, "+"),
-  op(kMinus, "-"),
-  op(kStar, "*"),
-  op(kSlash, "/"),
-  op(kDec, "--"),
-  op(kInc, "++"),
-  op(kLparent, "("),
-  op(kRparent, ")"),
-  op(kBegin, "BEGIN"),
-  op(kEnd, "END"),
-  op(kDot, "."),
-  op(kAssign, ":="),
-  // op(kVar, "VAR"),
-  op(kSemi, ";"),
-  op(kProgram, "PROGRAM"),
-  op(kVardecl, "VAR"),
-  op(kColon, ":"),
+  kVar,
+#define op(name, _) name,
+#define keyword(name, _) name,
+#include "keyword.inc"
+#undef keyword
 #undef op
 };
 
@@ -42,6 +29,8 @@ class Token {
   Token(TokenType type, TokenId id, std::string val = "")
       : type_(type), id_(id), val_(val) {}
 
+  static TokenId keyword2id(const std::string &id);
+
   std::string &val() { return val_; }
   const std::string val() const { return val_; }
   TokenType type() const { return type_; }
@@ -49,7 +38,12 @@ class Token {
   bool isKeyword(TokenId id) const {
     return type_ == TokenType::kKeyword && id_ == id;
   }
-
+  // bool isId(const std::string &id) const {
+  //   return type_ == TokenType::kId && val_ == id;
+  // }
+  bool isVar() const {
+    return type_ == TokenType::kId && id_ == TokenId::kVar;
+  }
  private:
   TokenType type_;
   TokenId id_;

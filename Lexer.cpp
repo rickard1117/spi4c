@@ -1,10 +1,11 @@
 #include "Lexer.h"
 
-#include "assert.h"
-#include "ctype.h"
+#include "Token.h"
+#include "util.h"
 
 namespace SI {
 namespace Interpreter {
+using namespace SI::util;
 
 char Lexer::current() const {
   if (text_.empty() || idx_ >= text_.length()) {
@@ -21,7 +22,7 @@ void Lexer::skipSpaces() {
 
 void Lexer::back(int step) {
   idx_ -= step;
-  assert(idx_ >= 0);
+  SI_ASSERT(idx_ >= 0);
 }
 
 bool Lexer::next(char expect) {
@@ -34,7 +35,7 @@ bool Lexer::next(char expect) {
 }
 
 std::unique_ptr<Token> Lexer::read_number(char c) {
-  assert(isdigit(c));
+  SI_ASSERT(isdigit(c));
   auto token = std::make_unique<Token>(TokenType::kNumber, TokenId::kNull);
   auto &val = token->val();
   while (isdigit(c)) {
@@ -60,15 +61,25 @@ char Lexer::readc() {
 }
 
 std::unique_ptr<Token> Lexer::read_ident(char c) {
-  assert(isalpha(c));
-  auto token = std::make_unique<Token>(TokenType::kId, TokenId::kNull);
-  auto &val = token->val();
-  while (isalpha(c)) {
+  SI_ASSERT(isalpha(c));
+
+  std::string val;
+  while (isalpha(c) || isdigit(c) || c == '_') {
     val.push_back(c);
     c = readc();
   }
   back();
-  return token;
+
+  auto tokid = Token::keyword2id(val);
+  std::unique_ptr<Token> tok;
+  if (tokid != TokenId::kNull) {
+    tok = std::make_unique<Token>(TokenType::kKeyword, tokid, std::move(val));
+  } else {
+    tok =
+        std::make_unique<Token>(TokenType::kId, TokenId::kVar, std::move(val));
+  }
+
+  return tok;
 }
 
 std::unique_ptr<Token> Lexer::getNextToken() {
@@ -104,7 +115,7 @@ std::unique_ptr<Token> Lexer::getNextToken() {
     default:
       throw "bad token";
   }
-  assert(0);
+  SI_ASSERT(0);
   // return t;
 }
 

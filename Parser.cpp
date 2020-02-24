@@ -1,30 +1,68 @@
 #include "Parser.h"
 
-#include <assert.h>
-
 #include "AST.h"
+#include "util.h"
 
 namespace SI {
 namespace Interpreter {
+using namespace SI::util;
 
-Parser::Parser(const std::string &formula) { lexer_.init(formula); }
+Parser::Parser(const std::string &s) { lexer_.init(s); }
 
-std::unique_ptr<ASTNode> Parser::astInt(long num) const {
+ASTNodePtr Parser::astInt(long num) {
   auto ast = std::make_unique<ASTNode>(ASTNodeType::kInt);
-  ast->setLong(num);
+  ast->setNumber(num);
   return ast;
 };
 
-std::unique_ptr<ASTNode> Parser::readNumber(const Token &tok) const {
-  assert(tok.type() == TokenType::kNumber);
-  return astInt(std::stol(tok.val()));
-}
-
-std::unique_ptr<ASTNode> Parser::astUnary(
-    ASTNodeType type, std::unique_ptr<ASTNode> operand) const {
+ASTNodePtr Parser::astUnary(ASTNodeType type, ASTNodePtr operand) {
   auto ast = std::make_unique<ASTNode>(type);
   ast->setOperand(std::move(operand));
   return ast;
+}
+
+ASTNodePtr Parser::astBinOp(ASTNodeType type, ASTNodePtr left,
+                            ASTNodePtr right) {
+  auto ast = std::make_unique<ASTNode>(type);
+  ast->setLeft(std::move(left));
+  ast->setRight(std::move(right));
+  return ast;
+}
+
+ASTNodePtr Parser::astBlock(std::vector<ASTNodePtr> decls,
+                            ASTNodePtr compound) {
+  auto ast = std::make_unique<ASTNode>(ASTNodeType::kBlock);
+  ast->setDecls(std::move(decls));
+  ast->setCompound(std::move(compound));
+  return ast;
+}
+
+ASTNodePtr Parser::astVardecl(const std::string &val) {
+  auto ast = std::make_unique<ASTNode>(ASTNodeType::kDeclaration);
+  ast->setVar(val);
+  return ast;
+}
+
+ASTNodePtr Parser::astVar(const std::string &id) {
+  auto ast = std::make_unique<ASTNode>(ASTNodeType::kVar);
+  ast->setVar(id);
+  return ast;
+}
+
+ASTNodePtr Parser::astAssignment(ASTNodePtr var, ASTNodePtr expr) {
+  auto ast = std::make_unique<ASTNode>(ASTNodeType::kAssignment);
+  ast->setLeft(std::move(var));
+  ast->setRight(std::move(expr));
+  return ast;
+}
+
+ASTNodePtr Parser::astCompound() {
+  return std::make_unique<ASTNode>(ASTNodeType::kCompound);
+}
+
+ASTNodePtr Parser::readNumber(const Token &tok) const {
+  SI_ASSERT(tok.type() == TokenType::kNumber);
+  return astInt(std::stol(tok.val()));
 }
 
 void Parser::eatKeyword(TokenId expect) {
@@ -34,7 +72,15 @@ void Parser::eatKeyword(TokenId expect) {
   }
 }
 
-std::unique_ptr<ASTNode> Parser::factor() {
+std::string Parser::eatVar() {
+  auto tok = readToken();
+  if (!tok->isVar()) {
+    throw "current token's not var";
+  }
+  return tok->val();
+}
+
+ASTNodePtr Parser::factor() {
   auto tok = readToken();
   switch (tok->type()) {
     case TokenType::kNumber:
@@ -58,7 +104,7 @@ std::unique_ptr<ASTNode> Parser::factor() {
     default:
       throw "bad factor";
   }
-  assert(0);
+  SI_ASSERT(0);
 }
 
 std::unique_ptr<Token> Parser::readToken() {
@@ -78,20 +124,26 @@ const Token *Parser::peekToken() {
 }
 
 void Parser::eatToken() {
-  assert(peekToken_.has_value());
+  SI_ASSERT(peekToken_.has_value());
   peekToken_ = std::nullopt;
 }
 
-std::unique_ptr<ASTNode> Parser::astBinOp(
-    ASTNodeType type, std::unique_ptr<ASTNode> left,
-    std::unique_ptr<ASTNode> right) const {
-  auto ast = std::make_unique<ASTNode>(type);
-  ast->setLeft(std::move(left));
-  ast->setRight(std::move(right));
-  return ast;
+bool Parser::next(ASTNodeType type) const {
+  // if (type == ASTNodeType::kCompound) {
+  //   auto tok = peekToken();
+  //   return tok->isVar();
+  // }
+
+  // if (type == ASTNodeType::kDeclaration) {
+  // }
+
+  // SI_ASSERT_MSG(0, "unsupported more() type");
+  // TODO : implement
+  SI_ASSERT(0);
+  return false;
 }
 
-std::unique_ptr<ASTNode> Parser::term() {
+ASTNodePtr Parser::term() {
   auto left = factor();
 
   const auto *tok = peekToken();
@@ -114,7 +166,7 @@ std::unique_ptr<ASTNode> Parser::term() {
   return left;
 }
 
-std::unique_ptr<ASTNode> Parser::expr() {
+ASTNodePtr Parser::expr() {
   auto left = term();
 
   const auto *tok = peekToken();
@@ -137,21 +189,7 @@ std::unique_ptr<ASTNode> Parser::expr() {
   return left;
 }
 
-std::unique_ptr<ASTNode> Parser::astVar(const std::string &id) const {
-  auto ast = std::make_unique<ASTNode>(ASTNodeType::kVar);
-  ast->setVar(id);
-  return ast;
-}
-
-std::unique_ptr<ASTNode> Parser::astAssignment(
-    std::unique_ptr<ASTNode> var, std::unique_ptr<ASTNode> expr) const {
-  auto ast = std::make_unique<ASTNode>(ASTNodeType::kAssignment);
-  ast->setLeft(std::move(var));
-  ast->setRight(std::move(expr));
-  return ast;
-}
-
-std::unique_ptr<ASTNode> Parser::assignmentStatement() {
+ASTNodePtr Parser::assignmentStatement() {
   auto var = readToken();
 
   if (var->type() != TokenType::kId) {
@@ -166,24 +204,86 @@ std::unique_ptr<ASTNode> Parser::assignmentStatement() {
   return astAssignment(astVar(var->val()), expr());
 }
 
-std::unique_ptr<ASTNode> Parser::program() {
-  auto com = compoundStatement();
-  eatKeyword(TokenId::kDot);
-  return com;
+// variable_declaration : ID (COMMA ID)* COLON type_spec
+// type_spec : INTEGER | REAL
+std::vector<ASTNodePtr> Parser::variableDeclaration() {
+  std::vector<ASTNodePtr> decls;
+  auto val = eatVar();
+  decls.push_back(astVardecl(val));
+
+  auto tok = peekToken();
+  while (tok->isKeyword(TokenId::kComma)) {
+    eatKeyword(TokenId::kComma);
+    decls.push_back(astVardecl(eatVar()));
+    tok = peekToken();
+  }
+
+  eatKeyword(TokenId::kColon);
+  typeSpec();
+
+  return decls;
 }
 
-std::unique_ptr<ASTNode> Parser::compoundStatement() {
+ASTNodePtr Parser::typeSpec() {
+  eatKeyword(TokenId::kInteger);
+  return nullptr;
+}
+
+// declarations : VAR (variable_declaration SEMI)+ | empty
+std::vector<ASTNodePtr> Parser::declarations() {
+  std::vector<ASTNodePtr> decls;
+  auto tok = peekToken();
+  if (!tok->isKeyword(TokenId::kVardecl)) {
+    return decls;
+  }
+  eatKeyword(TokenId::kVardecl);
+
+  auto decl = variableDeclaration();
+  if (decl.empty()) {
+    throw "bad declaration";
+  }
+
+  do {
+    eatKeyword(TokenId::kSemi);
+    decls.insert(std::end(decls), std::make_move_iterator(decl.begin()),
+                 std::make_move_iterator(decl.end()));
+    decl = variableDeclaration();
+  } while (!decl.empty());
+
+  return decls;
+}
+
+// block : declarations compound_statement
+ASTNodePtr Parser::block() {
+  return astBlock(declarations(), compoundStatement());
+}
+
+// program : PROGRAM variable SEMI block DOT
+ASTNodePtr Parser::program() {
+  eatKeyword(TokenId::kProgram);
+  auto tok = readToken();
+  if (tok->isVar()) {
+    throw "bad program";
+  }
+
+  // The program name, no use for now
+  // auto var = astVar(tok->val());
+  eatKeyword(TokenId::kSemi);
+  auto b = block();
+  eatKeyword(TokenId::kDot);
+  return b;
+}
+
+// compound_statement : BEGIN statement_list END
+ASTNodePtr Parser::compoundStatement() {
   eatKeyword(TokenId::kBegin);
   auto list = statementList();
   eatKeyword(TokenId::kEnd);
   return list;
 }
 
-std::unique_ptr<ASTNode> Parser::astCompound() const {
-  return std::make_unique<ASTNode>(ASTNodeType::kCompound);
-}
-
-std::unique_ptr<ASTNode> Parser::statementList() {
+// statement_list : statement | statement SEMI statement_list
+ASTNodePtr Parser::statementList() {
   auto stmt = statement();
   const auto *tok = peekToken();
   if (!tok->isKeyword(TokenId::kSemi)) {
@@ -191,27 +291,30 @@ std::unique_ptr<ASTNode> Parser::statementList() {
   }
 
   auto list = astCompound();
-  list->addStatement(std::move(stmt));
+  list->addCompund(std::move(stmt));
   while (tok->isKeyword(TokenId::kSemi)) {
     eatToken();
-    list->addStatement(statement());
+    list->addCompund(statement());
     tok = peekToken();
   }
 
   return list;
 }
 
-std::unique_ptr<ASTNode> Parser::empty() {
+ASTNodePtr Parser::empty() {
   return std::make_unique<ASTNode>(ASTNodeType::kEmpty);
 }
 
-std::unique_ptr<ASTNode> Parser::statement() {
+// statement : compound_statement | assignment_statement | empty
+ASTNodePtr Parser::statement() {
   auto tok = peekToken();
   if (tok->isKeyword(TokenId::kBegin)) {
+    // todo : use next(type)
     return compoundStatement();
   }
 
-  if (tok->isKeyword(TokenId::kAssign)) {
+  if (tok->isVar()) {
+    // todo : use next(type)
     return assignmentStatement();
   }
 

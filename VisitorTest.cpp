@@ -42,26 +42,26 @@ TEST(TestParser, MultiParents) {
 
 TEST(TestParser, SimpleUnary) { ASSERT_EQ(parseArithmeticExpr("-3"), -3); }
 
-// static std::map<std::string, int> parseAssignmentStatement(
-//     const std::string &formula) {
-//   Parser p{formula};
-//   auto ast = p.assignmentStatement();
-//   NodeVisitor visitor;
-//   ast->accept(&visitor);
-//   return visitor.varsTable();
-// }
+static const std::map<std::string, int> &parseAssignmentStatement(
+    const std::string &formula) {
+  Parser p{formula};
+  auto ast = p.assignmentStatement();
+  ASTNodeVisitor visitor;
+  visitor.visitAssignment(*ast);
+  return visitor.symbols();
+}
 
-// TEST(TestParser, SimpleAssignment) {
-//   auto table = parseAssignmentStatement("abc := 3");
-//   ASSERT_EQ(table["abc"], 3);
-// }
+TEST(TestParser, SimpleAssignment) {
+  auto table = parseAssignmentStatement("abc := 3");
+  ASSERT_EQ(table["abc"], 3);
+}
 
 // std::map<std::string, int> ParserProgram(const std::string &s) {
 //   Parser p{s};
 //   auto ast = p.program();
-//   NodeVisitor visitor;
-//   ast->accept(&visitor);
-//   return visitor.varsTable();
+//   ASTNodeVisitor visitor;
+//   visitor.visitCompound(*ast);
+//   return visitor.symbols();
 // }
 
 // TEST(TestParser, MultiAssignCompoundStatementProgram) {
