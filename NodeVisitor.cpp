@@ -9,17 +9,35 @@ namespace Interpreter {
 using namespace SI::util;
 
 void ASTNodeVisitor::visitCompound(const ASTNode &ast) {
-  switch (ast.type_) {
-    case ASTNodeType::kAssignment:
-      visitAssignment(ast);
-      return;
-    case ASTNodeType::kCompound:
-      visitCompound(ast);
-      return;
-    default:
-      SI_ASSERT_MSG(0, "ast type not match!!!");
+  for (const auto &com : ast.compounds_) {
+    if (com->type_ == ASTNodeType::kAssignment) {
+      visitAssignment(*com);
+    } else if (com->type_ == ASTNodeType::kCompound) {
+      visitCompound(*com);
+    } else if (com->type_ == ASTNodeType::kEmpty) {
+      continue;
+    } else {
+      SI_ASSERT_MSG(0,
+                    "compound children type not match!!! " +
+                        std::to_string(static_cast<std::size_t>(com->type_)));
+    }
   }
 }
+
+void ASTNodeVisitor::visitProgram(const ASTNode &prog) {
+  SI_ASSERT(prog.type_ == ASTNodeType::kProgram);
+  visitBlock(*prog.block_);
+}
+
+void ASTNodeVisitor::visitBlock(const ASTNode &block) {
+  for (const auto &decl : block.declarations_) {
+    visitDecl(*decl);
+  }
+
+  visitCompound(*block.compound_);
+}
+
+void ASTNodeVisitor::visitDecl(const ASTNode &decl) {}
 
 int ASTNodeVisitor::visitArith(const ASTNode &ast) {
   switch (ast.type_) {
@@ -50,10 +68,10 @@ void ASTNodeVisitor::visitAssignment(const ASTNode &ast) {
 }
 
 void ASTNodeVisitor::visit(const ASTNode &root) {
-  SI_ASSERT(root.type_ == ASTNodeType::kCompound);
-  for (auto &ast : *root.compounds_) {
-    visitCompound(*ast);
-  }
+  // SI_ASSERT(root.type_ == ASTNodeType::kCompound);
+  // for (auto &ast : *root.compounds_) {
+  //   visitCompound(*ast);
+  // }
 }
 }  // namespace Interpreter
 }  // namespace SI

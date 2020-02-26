@@ -22,7 +22,10 @@ class Lexer {
     idx_ = 0;
   }
 
+  std::string remaning() const { return text_.substr(idx_); }
+
  private:
+  // friend class Parser;
   std::unique_ptr<Token> read_number(char c);
   std::unique_ptr<Token> read_ident(char c);
   std::unique_ptr<Token> read_rep(char expect, TokenId id, TokenId els);

@@ -14,6 +14,9 @@ class ASTNodeVisitor {
   void visitCompound(const ASTNode &ast);
   void visitAssignment(const ASTNode &ast);
   int visitArith(const ASTNode &ast);
+  void visitProgram(const ASTNode &prog);
+  void visitBlock(const ASTNode &block);
+  void visitDecl(const ASTNode &decl);
   const std::map<std::string, int> &symbols() const { return symbolTable_; }
 
  private:

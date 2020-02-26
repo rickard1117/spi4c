@@ -15,7 +15,8 @@ char Lexer::current() const {
 }
 
 void Lexer::skipSpaces() {
-  while (current() == ' ') {
+  while (isblank(current()) || '\n' == current()) {
+    // while (current() == ' ') {
     advance();
   }
 }
@@ -113,7 +114,7 @@ std::unique_ptr<Token> Lexer::getNextToken() {
     case 'A' ... 'Z':
       return read_ident(c);
     default:
-      throw "bad token";
+      SI_ASSERT_MSG(0, "bad token" + std::to_string(c));
   }
   SI_ASSERT(0);
   // return t;

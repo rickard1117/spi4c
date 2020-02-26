@@ -43,6 +43,12 @@ ASTNodePtr Parser::astVardecl(const std::string &val) {
   return ast;
 }
 
+ASTNodePtr Parser::astProgram(ASTNodePtr block) {
+  auto ast = std::make_unique<ASTNode>(ASTNodeType::kProgram);
+  ast->setBlock(std::move(block));
+  return ast;
+}
+
 ASTNodePtr Parser::astVar(const std::string &id) {
   auto ast = std::make_unique<ASTNode>(ASTNodeType::kVar);
   ast->setVar(id);
@@ -56,8 +62,10 @@ ASTNodePtr Parser::astAssignment(ASTNodePtr var, ASTNodePtr expr) {
   return ast;
 }
 
-ASTNodePtr Parser::astCompound() {
-  return std::make_unique<ASTNode>(ASTNodeType::kCompound);
+ASTNodePtr Parser::astCompound(std::vector<ASTNodePtr> stmtlist) {
+  auto ast = std::make_unique<ASTNode>(ASTNodeType::kCompound);
+  ast->setCompounds(std::move(stmtlist));
+  return ast;
 }
 
 ASTNodePtr Parser::readNumber(const Token &tok) const {
@@ -68,14 +76,18 @@ ASTNodePtr Parser::readNumber(const Token &tok) const {
 void Parser::eatKeyword(TokenId expect) {
   auto tok = readToken();
   if (tok->type() != TokenType::kKeyword || tok->id() != expect) {
-    throw "unexpect keyword";
+    std::cout << "text remaning : " << lexer_.remaning() << '\n';
+    SI_ASSERT_MSG(0, "unexpect keyword , expect : " +
+                         std::to_string(static_cast<std::size_t>(expect)) +
+                         ", we but got : " +
+                         std::to_string(static_cast<std::size_t>(tok->id())));
   }
 }
 
 std::string Parser::eatVar() {
   auto tok = readToken();
   if (!tok->isVar()) {
-    throw "current token's not var";
+    SI_ASSERT_MSG(0, "current token's not var");
   }
   return tok->val();
 }
@@ -97,12 +109,12 @@ ASTNodePtr Parser::factor() {
           return ast;
         }
         default:
-          throw "bad token id";
+          SI_ASSERT_MSG(0, "bad token id");
       }
     }
 
     default:
-      throw "bad factor";
+      SI_ASSERT_MSG(0, "bad factor");
   }
   SI_ASSERT(0);
 }
@@ -193,13 +205,14 @@ ASTNodePtr Parser::assignmentStatement() {
   auto var = readToken();
 
   if (var->type() != TokenType::kId) {
-    throw "bad assignmentStatement";
+    SI_ASSERT_MSG(0, "bad assignmentStatement");
   }
 
-  auto assign = readToken();
-  if (!assign->isKeyword(TokenId::kAssign)) {
-    throw "bad assignmentStatement";
-  }
+  eatKeyword(TokenId::kAssign);
+  // auto assign = readToken();
+  // if (!assign->isKeyword(TokenId::kAssign)) {
+  //   SI_ASSERT_MSG(0, "bad assignmentStatement");
+  // }
 
   return astAssignment(astVar(var->val()), expr());
 }
@@ -240,7 +253,7 @@ std::vector<ASTNodePtr> Parser::declarations() {
 
   auto decl = variableDeclaration();
   if (decl.empty()) {
-    throw "bad declaration";
+    SI_ASSERT_MSG(0, "bad declaration");
   }
 
   do {
@@ -262,40 +275,34 @@ ASTNodePtr Parser::block() {
 ASTNodePtr Parser::program() {
   eatKeyword(TokenId::kProgram);
   auto tok = readToken();
-  if (tok->isVar()) {
-    throw "bad program";
+  if (!tok->isVar()) {
+    SI_ASSERT_MSG(0, "bad program");
   }
 
   // The program name, no use for now
   // auto var = astVar(tok->val());
   eatKeyword(TokenId::kSemi);
-  auto b = block();
+  auto p = astProgram(block());
   eatKeyword(TokenId::kDot);
-  return b;
+  return p;
 }
 
 // compound_statement : BEGIN statement_list END
 ASTNodePtr Parser::compoundStatement() {
   eatKeyword(TokenId::kBegin);
-  auto list = statementList();
+  auto compound = astCompound(statementList());
+  // auto list = statementList();
   eatKeyword(TokenId::kEnd);
-  return list;
+  return compound;
 }
 
 // statement_list : statement | statement SEMI statement_list
-ASTNodePtr Parser::statementList() {
-  auto stmt = statement();
-  const auto *tok = peekToken();
-  if (!tok->isKeyword(TokenId::kSemi)) {
-    return stmt;
-  }
-
-  auto list = astCompound();
-  list->addCompund(std::move(stmt));
-  while (tok->isKeyword(TokenId::kSemi)) {
-    eatToken();
-    list->addCompund(statement());
-    tok = peekToken();
+std::vector<ASTNodePtr> Parser::statementList() {
+  std::vector<ASTNodePtr> list;
+  list.push_back(statement());
+  if (peekToken()->isKeyword(TokenId::kSemi)) {
+    eatKeyword(TokenId::kSemi);
+    SI::util::vectorExtends(list, statementList());
   }
 
   return list;
@@ -320,29 +327,6 @@ ASTNodePtr Parser::statement() {
 
   return empty();
 }
-
-// std::unique_ptr<AST> Parser::block() {
-//   eat(TokenTypes::kVardecl);
-//   // auto block = std::make_unique<Block>();
-//   auto block = std::make_unique<AST>(TokenTypes::kBlock);
-//   block->add(variableDeclaration());
-//   eat(TokenTypes::kSemi);
-//   while (currentToken_.type() == TokenTypes::kVar) {
-//     block->add(variableDeclaration());
-//     eat(TokenTypes::kSemi);
-//   }
-//   block->add(compoundStatement());
-//   return block;
-// }
-
-// std::unique_ptr<AST> Parser::variableDeclaration() {
-//   assert(currentToken_.type() == TokenTypes::kVar);
-//   std::string id = currentToken_.varval();
-//   eat(TokenTypes::kVar);
-//   eat(TokenTypes::kColon);
-//   eat(TokenTypes::kInteger);
-//   return std::make_unique<AST>(id, VarDecl::kInteger);
-// }
 
 }  // namespace Interpreter
 }  // namespace SI

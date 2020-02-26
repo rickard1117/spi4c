@@ -3,7 +3,7 @@
 namespace SI {
 namespace util {
 void __ASSERT(const char *str, bool expr, const char *file, int line,
-              const char *msg) {
+              const std::string &msg) {
   if (!expr) {
     std::cerr << "Assert failed:\t" << msg << "\n"
               << "Expected:\t" << str << "\n"

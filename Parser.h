@@ -37,7 +37,7 @@ class Parser {
 
   // statement_list : statement
   //                  | statement SEMI statement_list
-  ASTNodePtr statementList();
+  std::vector<ASTNodePtr> statementList();
 
   // program : PROGRAM variable SEMI block DOT
   ASTNodePtr program();
@@ -99,7 +99,7 @@ class Parser {
   // type : kCompound
   // field : compounds_
   // children : kAssignment
-  static ASTNodePtr astCompound();
+  static ASTNodePtr astCompound(std::vector<ASTNodePtr> stmtlist);
 
   // type : kBlock
   // field : declarations_ compounds_
@@ -111,6 +111,11 @@ class Parser {
   // field : left_ right_
   // children : left(kVar) right(kType)
   static ASTNodePtr astVardecl(const std::string &val);
+
+  // type : kProgram
+  // field ; block_
+  // children : block
+  static ASTNodePtr astProgram(ASTNodePtr block);
 
   void eatKeyword(TokenId expect);
   std::string eatVar();
