@@ -12,177 +12,150 @@
 namespace SI {
 namespace Interpreter {
 
-enum class ASTNodeType {
-  kInt = 0,
-  kReal,
-  kAdd,
-  kSub,
-  kMul,
-  kDiv,
-  kUnaryOpPlus,
-  kUnaryOpMinus,
-  kVar,
-  kEmpty,
-  kCompound,
-  kAssignment,
-  kBlock,
-  kDeclaration,
-  kProgram,
-};
-// class ASTProgram;
-// class ASTBlock;
-// class ASTCompound;
-// class ASTAssignment;
-// class ASTDeclaration;
-// class ASTVar;
-// class ASTType;
-// class ASTNumber;
-// class ASTUnaryOp;
+using SI::util::Noncopyable;
+using SI::util::Ptr;
 
-// class ASTBase : public SI::util::Noncopyable {
-//  public:
-//   virtual ~ASTBase() = default;
-//   virtual void accept(const class BaseVisitor &v) = 0;
-// };
+#define COMMA ,
+#define SEMI ;
+#define AST_TYPE(DO, DELIMITER)                                         \
+  DO(Program)                                                           \
+  DELIMITER DO(Block) DELIMITER DO(Compound) DELIMITER DO(Assignment)   \
+      DELIMITER DO(Number) DELIMITER DO(UnaryOp) DELIMITER DO(BinaryOp) \
+          DELIMITER DO(Declaration) DELIMITER DO(Var) DELIMITER DO(Empty)
 
-// class ASTProgram : public ASTBase {
-//  public:
-//   ASTProgram(Ptr<ASTBlock> block) : block_(std::move(block)) {}
-//   void accept(const class BaseVisitor &v) override;
-
-//  private:
-//   Ptr<ASTBlock> block_;
-// };
-
-// class ASTBlock : public ASTBase {
-//  public:
-//   ASTBlock(std::vector<Ptr<ASTDeclaration>> &&decls, Ptr<ASTCompound>
-//   compound)
-//       : decls_(decls), compound_(std::move(compound)) {}
-//   void accept(const class BaseVisitor &v) override;
-
-//  private:
-//   std::vector<Ptr<ASTDeclaration>> decls_;
-//   Ptr<ASTCompound> compound_;
-// };
-
-// class ASTVar : public ASTBase {
-//  public:
-//   ASTVar(const std::string &id) : id_(id) {}
-//   void accept(const class BaseVisitor &v) override;
-
-//  private:
-//   std::string id_;
-// };
-
-// class ASTDeclaration : public ASTBase {
-//  public:
-//   ASTDeclaration(Ptr<ASTVar> var, Ptr<ASTType> type)
-//       : var_(std::move(var)), type_(std::move(type)) {}
-//   void accept(const class BaseVisitor &v) override;
-
-//  private:
-//   Ptr<ASTVar> var_;
-//   Ptr<ASTType> type_;
-// };
-
-// class ASTCompound : public ASTBase {
-//  public:
-//   ASTCompound() = default;
-//   void addCompound();
-//   void accept(const class BaseVisitor &v) override;
-
-//  private:
-//   std::vector<Ptr<ASTAssignment>> ass_;
-// };
-
-// class ASTRValueExpr : public ASTBase {
-// public:
-//   void accept(const class BaseVisitor &v) override;
-// };
-
-// class ASTBinOp : public ASTBase {
-//  public:
-//   ASTBinOp() = delete;
-//   ASTBinOp()
-//   void accept(const class BaseVisitor &v) override;
-
-//  private:
-//   Ptr<ASTVar> var_;
-//   std::variant<Ptr<ASTBinOp>, Ptr<ASTVar>, Ptr<ASTUnaryOp>, Ptr<ASTNumber>>
-//       expr_;
-// };
-
-// class ASTUnaryOp : public ASTBase {
-//   public
-// }
-
-// class ASTNumber : public ASTBase {
-//  public:
-//   ASTNumber(long num) : num_(num) {}
-//   ASTNumber(double num) : num_(num) {}
-//   void accept(const class BaseVisitor &v) override;
-
-//  private:
-//   std::variant<long, double> num_;
-// };
+#define CLASS_DECL(name) class name
+#define MAKE_ENUM(name) k##name
+#define STD_VARIANT(name) name
+AST_TYPE(CLASS_DECL, SEMI);
 
 class ASTNode;
-using ASTNodePtr = std::unique_ptr<ASTNode>;
-class ASTNode {
+class Empty : public Noncopyable {
  public:
-  ASTNode(ASTNodeType type) : type_(type) {}
+  Empty() = default;
+};
 
-  void setNumber(long num);
-  void setOperand(ASTNodePtr operand);
-  void setLeft(ASTNodePtr left);
-  void setRight(ASTNodePtr right);
-  void setVar(const std::string &val);
-  void setBlock(ASTNodePtr block);
-  // bool empty() const;
-  void addAssignment(ASTNodePtr com);
-  void addCompoundOrAssignment(ASTNodePtr com);
-  void setDecls(std::vector<ASTNodePtr> &&decls);
-  void setCompound(ASTNodePtr com);
-  void setCompounds(std::vector<ASTNodePtr> coms);
+class Number : public Noncopyable {
+ public:
+  Number(std::string &&val) : val_(val) {}
+  Number(const std::string &val) : val_(val) {}
 
  private:
   friend class ASTNodeVisitor;
-  ASTNodeType type_;
-
-  // empty
-  // bool empty_;
-
-  // variable
-  std::string varId_;
-
-  // number
-  std::variant<long, double> numval_;
-
-  // binary op  or assignment
-  ASTNodePtr left_;
-  ASTNodePtr right_;
-
-  // unary op
-  ASTNodePtr operand_;
-
-  // program
-  ASTNodePtr block_;
-
-  // compound
-  std::unique_ptr<std::vector<ASTNodePtr>> assignments_;
-
-  // block
-  std::vector<ASTNodePtr> declarations_;
-
-  // block
-  ASTNodePtr compound_;
-
-  // compound
-  std::vector<ASTNodePtr> compounds_;
+  const std::string val_;
 };
 
-// using ASTNodePtr = std::unique_ptr<ASTNode>;
+class Program : public Noncopyable {
+ public:
+  Program(Ptr<ASTNode> block) : block_(std::move(block)) {}
+
+ private:
+  friend class ASTNodeVisitor;
+  Ptr<ASTNode> block_;
+};
+
+class Block : public Noncopyable {
+ public:
+  Block(std::vector<Ptr<ASTNode>> decls, Ptr<ASTNode> compound)
+      : decls_(std::move(decls)), compound_(std::move(compound)) {}
+
+ private:
+  friend class ASTNodeVisitor;
+  std::vector<Ptr<ASTNode>> decls_;
+  Ptr<ASTNode> compound_;
+};
+
+class Compound : public Noncopyable {
+ public:
+  Compound(std::vector<Ptr<ASTNode>> children)
+      : children_(std::move(children)) {}
+
+ private:
+  friend class ASTNodeVisitor;
+  std::vector<Ptr<ASTNode>> children_;
+};
+
+class Assignment : public Noncopyable {
+ public:
+  Assignment(Ptr<ASTNode> var, Ptr<ASTNode> expr)
+      : var_(std::move(var)), expr_(std::move(expr)) {}
+
+ private:
+  friend class ASTNodeVisitor;
+  Ptr<ASTNode> var_;
+  Ptr<ASTNode> expr_;
+};
+
+enum class UnaryOpType { kPlus, kMinus };
+class UnaryOp : public Noncopyable {
+ public:
+  UnaryOp(UnaryOpType type, Ptr<ASTNode> operand)
+      : type_(type), operand_(std::move(operand)) {}
+
+ private:
+  friend class ASTNodeVisitor;
+  UnaryOpType type_;
+  Ptr<ASTNode> operand_;
+};
+
+enum class BinaryOpType { kAdd, kSub, kMul, kDiv };
+class BinaryOp : public Noncopyable {
+ public:
+  BinaryOp(BinaryOpType type, Ptr<ASTNode> left, Ptr<ASTNode> right)
+      : type_(type), left_(std::move(left)), right_(std::move(right)) {}
+
+ private:
+  friend class ASTNodeVisitor;
+  BinaryOpType type_;
+  Ptr<ASTNode> left_;
+  Ptr<ASTNode> right_;
+};
+
+class Var : public Noncopyable {
+ public:
+  Var(const std::string &val) : id_(val) {}
+
+ private:
+  friend class ASTNodeVisitor;
+  const std::string id_;
+};
+
+enum class DeclarationType { kInt, kReal };
+class Declaration : public Noncopyable {
+ public:
+  Declaration(const std::string &var, DeclarationType type)
+      : var_(var), type_(type) {}
+
+ private:
+  friend class ASTNodeVisitor;
+  const std::string var_;
+  const DeclarationType type_;
+};
+
+enum class ASTNodeType { AST_TYPE(MAKE_ENUM, COMMA) };
+
+class ASTNode {
+ public:
+  template <class T, class... Args>
+  ASTNode(ASTNodeType type, std::in_place_type_t<T> t, Args &&... args)
+      : type_(type), v_(t, std::forward<Args>(args)...) {}
+
+  ASTNodeType type() const { return type_; }
+
+  template <class T>
+  const T &fetch() const {
+    return std::get<T>(v_);
+  }
+
+  template <class T>
+  T &fetch() {
+    return std::get<T>(v_);
+  }
+
+ private:
+  friend class ASTNodeVisitor;
+  const ASTNodeType type_;
+  std::variant<AST_TYPE(STD_VARIANT, COMMA)> v_;
+};
 
 }  // namespace Interpreter
 }  // namespace SI

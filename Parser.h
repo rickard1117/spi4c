@@ -14,108 +14,39 @@ namespace Interpreter {
 class Parser {
  public:
   Parser(const std::string &s);
-
-  // expr : term ((PLUS | MINUS) term)*
-  ASTNodePtr expr();
-
-  // term : factor ((MUL | INTEGER_DIV | FLOAT_DIV) factor)*
-  ASTNodePtr term();
-
-  // factor : PLUS factor
-  //          | MINUS factor
-  //          | INTEGER_CONST
-  //          | REAL_CONST
-  //          | LPAREN expr RPAREN
-  //          | variable
-  ASTNodePtr factor();
-
-  // assignment_statement : variable ASSIGN expr
-  ASTNodePtr assignmentStatement();
-
-  // compound_statement : BEGIN statement_list END
-  ASTNodePtr compoundStatement();
-
-  // statement_list : statement
-  //                  | statement SEMI statement_list
-  std::vector<ASTNodePtr> statementList();
-
-  // program : PROGRAM variable SEMI block DOT
-  ASTNodePtr program();
-
-  // statement : compound_statement
-  //             | assignment_statement
-  //             | empty
-  ASTNodePtr statement();
-
-  // empty
-  ASTNodePtr empty();
-
-  // block : declarations compound_statement
-  ASTNodePtr block();
-
-  // declarations : VAR (variable_declaration SEMI)+
-  //                | empty
-  std::vector<ASTNodePtr> declarations();
-
-  // variable_declaration : ID (COMMA ID)* COLON type_spec
-  std::vector<ASTNodePtr> variableDeclaration();
-
-  ASTNodePtr typeSpec();
+  Ptr<ASTNode> expr();
+  Ptr<ASTNode> term();
+  Ptr<ASTNode> factor();
+  Ptr<ASTNode> assignmentStatement();
+  Ptr<ASTNode> compoundStatement();
+  std::vector<Ptr<ASTNode>> statementList();
+  Ptr<ASTNode> program();
+  Ptr<ASTNode> statement();
+  Ptr<ASTNode> empty();
+  Ptr<ASTNode> block();
+  std::vector<Ptr<ASTNode>> declarations();
+  std::vector<Ptr<ASTNode>> variableDeclaration();
+  Ptr<ASTNode> typeSpec();
 
  private:
   std::unique_ptr<Token> readToken();
   const Token *peekToken();
   void eatToken();
-  // check if the next parsed node is of the specified type
   bool next(ASTNodeType type) const;
-  ASTNodePtr readNumber(const Token &tok) const;
+  Ptr<ASTNode> readNumber(const Token &tok) const;
 
-  // type : kInt
-  // field : numval_
-  // child : none
-  static ASTNodePtr astInt(long num);
-
-  // type : kUnaryOpPlus | kUnaryOpMinus
-  // field : operand_
-  // children : kUnary | kInt
-  static ASTNodePtr astUnary(ASTNodeType type, ASTNodePtr operand);
-
-  // type : kAdd | kSub | kMul | kDiv
-  // field : left_ right_
-  // children : kInt | kUnary | kAdd | kSub | kMul | kDiv
-  static ASTNodePtr astBinOp(ASTNodeType type, ASTNodePtr left,
-                             ASTNodePtr right);
-
-  // type : kVar
-  // field : varId_
-  // children : none
-  static ASTNodePtr astVar(const std::string &id);
-
-  // type : kAssignment
-  // field : left_ right_
-  // children : left_(kVar) right_(kUnary | kInt | kAdd | kSub | kMul | kDiv)
-  static ASTNodePtr astAssignment(ASTNodePtr var, ASTNodePtr expr);
-
-  // type : kCompound
-  // field : compounds_
-  // children : kAssignment
-  static ASTNodePtr astCompound(std::vector<ASTNodePtr> stmtlist);
-
-  // type : kBlock
-  // field : declarations_ compounds_
-  // children : kDeclaration
-  static ASTNodePtr astBlock(std::vector<ASTNodePtr> decls,
-                             ASTNodePtr compound);
-
-  // type : kDeclaration
-  // field : left_ right_
-  // children : left(kVar) right(kType)
-  static ASTNodePtr astVardecl(const std::string &val);
-
-  // type : kProgram
-  // field ; block_
-  // children : block
-  static ASTNodePtr astProgram(ASTNodePtr block);
+  static Ptr<ASTNode> astNumber(const std::string &num);
+  static Ptr<ASTNode> astUnary(UnaryOpType type, Ptr<ASTNode> operand);
+  static Ptr<ASTNode> astBinOp(BinaryOpType type, Ptr<ASTNode> left,
+                               Ptr<ASTNode> right);
+  static Ptr<ASTNode> astVar(const std::string &id);
+  static Ptr<ASTNode> astAssignment(Ptr<ASTNode> var, Ptr<ASTNode> expr);
+  static Ptr<ASTNode> astCompound(std::vector<Ptr<ASTNode>> stmtlist);
+  static Ptr<ASTNode> astBlock(std::vector<Ptr<ASTNode>> decls,
+                               Ptr<ASTNode> compound);
+  static Ptr<ASTNode> astDeclaration(const std::string &val);
+  static Ptr<ASTNode> astProgram(Ptr<ASTNode> block);
+  static Ptr<ASTNode> astEmpty();
 
   void eatKeyword(TokenId expect);
   std::string eatVar();

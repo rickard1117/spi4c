@@ -9,7 +9,6 @@ std::unordered_map<std::string, TokenId> keywords;
 void keywordsInsert(TokenId id, const std::string &val) { keywords[val] = id; }
 
 int init() {
-  // using SI::Interpreter::TokenId;
 #define op(name, str) keywordsInsert(TokenId::name, str);
 #define keyword(name, str) keywordsInsert(TokenId::name, str);
 #include "keyword.inc"

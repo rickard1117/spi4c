@@ -10,13 +10,15 @@ namespace Interpreter {
 class ASTNodeVisitor {
  public:
   ASTNodeVisitor() = default;
-  void visit(const class ASTNode &ast);
-  void visitCompound(const ASTNode &ast);
-  void visitAssignment(const ASTNode &ast);
-  int visitArith(const ASTNode &ast);
-  void visitProgram(const ASTNode &prog);
-  void visitBlock(const ASTNode &block);
-  void visitDecl(const ASTNode &decl);
+  void visitCompound(const class Compound &com);
+  void visitAssignment(const class Assignment &assign);
+  int visitArithExpr(const class ASTNode &ast);
+  int visitBinOp(const class BinaryOp &op);
+  int visitUnaryOp(const class UnaryOp &op);
+  int visitNumber(const class Number &num);
+  void visitProgram(const class Program &prog);
+  void visitBlock(const class Block &block);
+  void visitDecl(const class Declaration &decl);
   const std::map<std::string, int> &symbols() const { return symbolTable_; }
 
  private:

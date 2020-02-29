@@ -38,9 +38,6 @@ class Token {
   bool isKeyword(TokenId id) const {
     return type_ == TokenType::kKeyword && id_ == id;
   }
-  // bool isId(const std::string &id) const {
-  //   return type_ == TokenType::kId && val_ == id;
-  // }
   bool isVar() const {
     return type_ == TokenType::kId && id_ == TokenId::kVar;
   }

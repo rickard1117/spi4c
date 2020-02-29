@@ -9,7 +9,7 @@ static int parseArithmeticExpr(const std::string &formula) {
   Parser p{formula};
   auto ast = p.expr();
   ASTNodeVisitor visitor;
-  return visitor.visitArith(*ast);
+  return visitor.visitArithExpr(*ast);
 }
 
 TEST(TestParser, OneNumFormula) { ASSERT_EQ(parseArithmeticExpr("2"), 2); }
@@ -47,7 +47,7 @@ static std::map<std::string, int> parseAssignmentStatement(
   Parser p{formula};
   auto ast = p.assignmentStatement();
   ASTNodeVisitor visitor;
-  visitor.visitAssignment(*ast);
+  visitor.visitAssignment(ast->fetch<Assignment>());
   return visitor.symbols();
 }
 
@@ -60,7 +60,7 @@ std::map<std::string, int> ParserProgram(const std::string &s) {
   Parser p{s};
   auto ast = p.program();
   ASTNodeVisitor visitor;
-  visitor.visitProgram(*ast);
+  visitor.visitProgram(ast->fetch<Program>());
   return visitor.symbols();
 }
 

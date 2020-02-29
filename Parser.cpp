@@ -7,70 +7,67 @@ namespace SI {
 namespace Interpreter {
 using namespace SI::util;
 
+#define IN_PLACE_TYPE(name) \
+  std::in_place_type_t<name> {}
+
 Parser::Parser(const std::string &s) { lexer_.init(s); }
 
-ASTNodePtr Parser::astInt(long num) {
-  auto ast = std::make_unique<ASTNode>(ASTNodeType::kInt);
-  ast->setNumber(num);
-  return ast;
+Ptr<ASTNode> Parser::astNumber(const std::string &num) {
+  return std::make_unique<ASTNode>(ASTNodeType::kNumber, IN_PLACE_TYPE(Number),
+                                   num);
 };
 
-ASTNodePtr Parser::astUnary(ASTNodeType type, ASTNodePtr operand) {
-  auto ast = std::make_unique<ASTNode>(type);
-  ast->setOperand(std::move(operand));
-  return ast;
+Ptr<ASTNode> Parser::astUnary(UnaryOpType type, Ptr<ASTNode> operand) {
+  return std::make_unique<ASTNode>(
+      ASTNodeType::kUnaryOp, IN_PLACE_TYPE(UnaryOp), type, std::move(operand));
 }
 
-ASTNodePtr Parser::astBinOp(ASTNodeType type, ASTNodePtr left,
-                            ASTNodePtr right) {
-  auto ast = std::make_unique<ASTNode>(type);
-  ast->setLeft(std::move(left));
-  ast->setRight(std::move(right));
-  return ast;
+Ptr<ASTNode> Parser::astBinOp(BinaryOpType type, Ptr<ASTNode> left,
+                              Ptr<ASTNode> right) {
+  return std::make_unique<ASTNode>(ASTNodeType::kBinaryOp,
+                                   IN_PLACE_TYPE(BinaryOp), type,
+                                   std::move(left), std::move(right));
 }
 
-ASTNodePtr Parser::astBlock(std::vector<ASTNodePtr> decls,
-                            ASTNodePtr compound) {
-  auto ast = std::make_unique<ASTNode>(ASTNodeType::kBlock);
-  ast->setDecls(std::move(decls));
-  ast->setCompound(std::move(compound));
-  return ast;
+Ptr<ASTNode> Parser::astBlock(std::vector<Ptr<ASTNode>> decls,
+                              Ptr<ASTNode> compound) {
+  return std::make_unique<ASTNode>(ASTNodeType::kBlock, IN_PLACE_TYPE(Block),
+                                   std::move(decls), std::move(compound));
 }
 
-ASTNodePtr Parser::astVardecl(const std::string &val) {
-  auto ast = std::make_unique<ASTNode>(ASTNodeType::kDeclaration);
-  ast->setVar(val);
-  return ast;
+Ptr<ASTNode> Parser::astDeclaration(const std::string &val) {
+  return std::make_unique<ASTNode>(ASTNodeType::kDeclaration,
+                                   IN_PLACE_TYPE(Declaration), val,
+                                   DeclarationType::kInt);
 }
 
-ASTNodePtr Parser::astProgram(ASTNodePtr block) {
-  auto ast = std::make_unique<ASTNode>(ASTNodeType::kProgram);
-  ast->setBlock(std::move(block));
-  return ast;
+Ptr<ASTNode> Parser::astProgram(Ptr<ASTNode> block) {
+  return std::make_unique<ASTNode>(ASTNodeType::kProgram,
+                                   IN_PLACE_TYPE(Program), std::move(block));
 }
 
-ASTNodePtr Parser::astVar(const std::string &id) {
-  auto ast = std::make_unique<ASTNode>(ASTNodeType::kVar);
-  ast->setVar(id);
-  return ast;
+Ptr<ASTNode> Parser::astVar(const std::string &id) {
+  return std::make_unique<ASTNode>(ASTNodeType::kVar, IN_PLACE_TYPE(Var), id);
 }
 
-ASTNodePtr Parser::astAssignment(ASTNodePtr var, ASTNodePtr expr) {
-  auto ast = std::make_unique<ASTNode>(ASTNodeType::kAssignment);
-  ast->setLeft(std::move(var));
-  ast->setRight(std::move(expr));
-  return ast;
+Ptr<ASTNode> Parser::astAssignment(Ptr<ASTNode> var, Ptr<ASTNode> expr) {
+  return std::make_unique<ASTNode>(ASTNodeType::kAssignment,
+                                   IN_PLACE_TYPE(Assignment), std::move(var),
+                                   std::move(expr));
 }
 
-ASTNodePtr Parser::astCompound(std::vector<ASTNodePtr> stmtlist) {
-  auto ast = std::make_unique<ASTNode>(ASTNodeType::kCompound);
-  ast->setCompounds(std::move(stmtlist));
-  return ast;
+Ptr<ASTNode> Parser::astCompound(std::vector<Ptr<ASTNode>> stmtlist) {
+  return std::make_unique<ASTNode>(
+      ASTNodeType::kCompound, IN_PLACE_TYPE(Compound), std::move(stmtlist));
 }
 
-ASTNodePtr Parser::readNumber(const Token &tok) const {
+Ptr<ASTNode> Parser::astEmpty() {
+  return std::make_unique<ASTNode>(ASTNodeType::kEmpty, IN_PLACE_TYPE(Empty));
+}
+
+Ptr<ASTNode> Parser::readNumber(const Token &tok) const {
   SI_ASSERT(tok.type() == TokenType::kNumber);
-  return astInt(std::stol(tok.val()));
+  return astNumber(tok.val());
 }
 
 void Parser::eatKeyword(TokenId expect) {
@@ -92,7 +89,7 @@ std::string Parser::eatVar() {
   return tok->val();
 }
 
-ASTNodePtr Parser::factor() {
+Ptr<ASTNode> Parser::factor() {
   auto tok = readToken();
   switch (tok->type()) {
     case TokenType::kNumber:
@@ -100,9 +97,9 @@ ASTNodePtr Parser::factor() {
     case TokenType::kKeyword: {
       switch (tok->id()) {
         case TokenId::kPlus:
-          return astUnary(ASTNodeType::kUnaryOpPlus, factor());
+          return astUnary(UnaryOpType::kPlus, factor());
         case TokenId::kMinus:
-          return astUnary(ASTNodeType::kUnaryOpMinus, factor());
+          return astUnary(UnaryOpType::kMinus, factor());
         case TokenId::kLparent: {
           auto ast = expr();
           eatKeyword(TokenId::kRparent);
@@ -155,7 +152,7 @@ bool Parser::next(ASTNodeType type) const {
   return false;
 }
 
-ASTNodePtr Parser::term() {
+Ptr<ASTNode> Parser::term() {
   auto left = factor();
 
   const auto *tok = peekToken();
@@ -163,13 +160,13 @@ ASTNodePtr Parser::term() {
   while (tok->type() == TokenType::kKeyword) {
     if (tok->id() == TokenId::kStar) {
       eatToken();
-      left = astBinOp(ASTNodeType::kMul, std::move(left), factor());
+      left = astBinOp(BinaryOpType::kMul, std::move(left), factor());
       tok = peekToken();
       continue;
     }
     if (tok->id() == TokenId::kSlash) {
       eatToken();
-      left = astBinOp(ASTNodeType::kDiv, std::move(left), factor());
+      left = astBinOp(BinaryOpType::kDiv, std::move(left), factor());
       tok = peekToken();
       continue;
     }
@@ -178,7 +175,7 @@ ASTNodePtr Parser::term() {
   return left;
 }
 
-ASTNodePtr Parser::expr() {
+Ptr<ASTNode> Parser::expr() {
   auto left = term();
 
   const auto *tok = peekToken();
@@ -186,13 +183,13 @@ ASTNodePtr Parser::expr() {
   while (tok->type() == TokenType::kKeyword) {
     if (tok->id() == TokenId::kPlus) {
       eatToken();
-      left = astBinOp(ASTNodeType::kAdd, std::move(left), term());
+      left = astBinOp(BinaryOpType::kAdd, std::move(left), term());
       tok = peekToken();
       continue;
     }
     if (tok->id() == TokenId::kMinus) {
       eatToken();
-      left = astBinOp(ASTNodeType::kSub, std::move(left), term());
+      left = astBinOp(BinaryOpType::kSub, std::move(left), term());
       tok = peekToken();
       continue;
     }
@@ -201,7 +198,7 @@ ASTNodePtr Parser::expr() {
   return left;
 }
 
-ASTNodePtr Parser::assignmentStatement() {
+Ptr<ASTNode> Parser::assignmentStatement() {
   auto var = readToken();
 
   if (var->type() != TokenType::kId) {
@@ -219,15 +216,15 @@ ASTNodePtr Parser::assignmentStatement() {
 
 // variable_declaration : ID (COMMA ID)* COLON type_spec
 // type_spec : INTEGER | REAL
-std::vector<ASTNodePtr> Parser::variableDeclaration() {
-  std::vector<ASTNodePtr> decls;
+std::vector<Ptr<ASTNode>> Parser::variableDeclaration() {
+  std::vector<Ptr<ASTNode>> decls;
   auto val = eatVar();
-  decls.push_back(astVardecl(val));
+  decls.push_back(astDeclaration(val));
 
   auto tok = peekToken();
   while (tok->isKeyword(TokenId::kComma)) {
     eatKeyword(TokenId::kComma);
-    decls.push_back(astVardecl(eatVar()));
+    decls.push_back(astDeclaration(eatVar()));
     tok = peekToken();
   }
 
@@ -237,14 +234,14 @@ std::vector<ASTNodePtr> Parser::variableDeclaration() {
   return decls;
 }
 
-ASTNodePtr Parser::typeSpec() {
+Ptr<ASTNode> Parser::typeSpec() {
   eatKeyword(TokenId::kInteger);
   return nullptr;
 }
 
 // declarations : VAR (variable_declaration SEMI)+ | empty
-std::vector<ASTNodePtr> Parser::declarations() {
-  std::vector<ASTNodePtr> decls;
+std::vector<Ptr<ASTNode>> Parser::declarations() {
+  std::vector<Ptr<ASTNode>> decls;
   auto tok = peekToken();
   if (!tok->isKeyword(TokenId::kVardecl)) {
     return decls;
@@ -267,12 +264,12 @@ std::vector<ASTNodePtr> Parser::declarations() {
 }
 
 // block : declarations compound_statement
-ASTNodePtr Parser::block() {
+Ptr<ASTNode> Parser::block() {
   return astBlock(declarations(), compoundStatement());
 }
 
 // program : PROGRAM variable SEMI block DOT
-ASTNodePtr Parser::program() {
+Ptr<ASTNode> Parser::program() {
   eatKeyword(TokenId::kProgram);
   auto tok = readToken();
   if (!tok->isVar()) {
@@ -288,7 +285,7 @@ ASTNodePtr Parser::program() {
 }
 
 // compound_statement : BEGIN statement_list END
-ASTNodePtr Parser::compoundStatement() {
+Ptr<ASTNode> Parser::compoundStatement() {
   eatKeyword(TokenId::kBegin);
   auto compound = astCompound(statementList());
   // auto list = statementList();
@@ -297,8 +294,8 @@ ASTNodePtr Parser::compoundStatement() {
 }
 
 // statement_list : statement | statement SEMI statement_list
-std::vector<ASTNodePtr> Parser::statementList() {
-  std::vector<ASTNodePtr> list;
+std::vector<Ptr<ASTNode>> Parser::statementList() {
+  std::vector<Ptr<ASTNode>> list;
   list.push_back(statement());
   if (peekToken()->isKeyword(TokenId::kSemi)) {
     eatKeyword(TokenId::kSemi);
@@ -308,12 +305,10 @@ std::vector<ASTNodePtr> Parser::statementList() {
   return list;
 }
 
-ASTNodePtr Parser::empty() {
-  return std::make_unique<ASTNode>(ASTNodeType::kEmpty);
-}
+Ptr<ASTNode> Parser::empty() { return astEmpty(); }
 
 // statement : compound_statement | assignment_statement | empty
-ASTNodePtr Parser::statement() {
+Ptr<ASTNode> Parser::statement() {
   auto tok = peekToken();
   if (tok->isKeyword(TokenId::kBegin)) {
     // todo : use next(type)
