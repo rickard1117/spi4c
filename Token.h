@@ -1,6 +1,7 @@
 #ifndef SI_TOKEN_H_
 #define SI_TOKEN_H_
 
+#include <optional>
 #include <string>
 
 namespace SI {
@@ -26,25 +27,25 @@ enum class TokenId {
 
 class Token {
  public:
-  Token(TokenType type, TokenId id, std::string val = "")
-      : type_(type), id_(id), val_(val) {}
+  Token(TokenType type, TokenId id) : type_(type), id_(id) {}
+  Token(TokenType type, TokenId id, const std::string &val);
+  Token(TokenType type, TokenId id, const std::string &&val);
 
   static TokenId keyword2id(const std::string &id);
 
-  std::string &val() { return val_; }
-  const std::string val() const { return val_; }
+  const std::string &val() const;
+
   TokenType type() const { return type_; }
   TokenId id() const { return id_; }
   bool isKeyword(TokenId id) const {
     return type_ == TokenType::kKeyword && id_ == id;
   }
-  bool isVar() const {
-    return type_ == TokenType::kId && id_ == TokenId::kVar;
-  }
+  bool isVar() const { return type_ == TokenType::kId && id_ == TokenId::kVar; }
+
  private:
   TokenType type_;
   TokenId id_;
-  std::string val_;
+  std::optional<std::string> val_;
 };
 
 }  // namespace Interpreter

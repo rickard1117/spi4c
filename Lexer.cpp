@@ -36,14 +36,15 @@ bool Lexer::next(char expect) {
 
 std::unique_ptr<Token> Lexer::read_number(char c) {
   SI_ASSERT(isdigit(c));
-  auto token = std::make_unique<Token>(TokenType::kNumber, TokenId::kNull);
-  auto &val = token->val();
+  std::string val;
   while (isdigit(c)) {
     val.push_back(c);
     c = readc();
   }
   back();
-  return token;
+
+  return std::make_unique<Token>(TokenType::kNumber, TokenId::kNull,
+                                 std::move(val));
 }
 
 std::unique_ptr<Token> Lexer::make_keyword(TokenId id) {

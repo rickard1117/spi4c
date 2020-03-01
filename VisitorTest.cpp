@@ -80,6 +80,8 @@ TEST(TestParser, MultiAssignCompoundStatementProgram) {
 //   ASSERT_EQ(table["b"], 3);
 // }
 
+
+
 TEST(TestParser, MultiCompoundStatementProgram) {
   const std::string s = R"(
     PROGRAM part2;

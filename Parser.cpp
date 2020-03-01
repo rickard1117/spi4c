@@ -89,6 +89,13 @@ std::string Parser::eatVar() {
   return tok->val();
 }
 
+
+// factor : PLUS factor
+//            | MINUS factor
+//            | INTEGER_CONST
+//            | REAL_CONST
+//            | LPAREN expr RPAREN
+//            | variable
 Ptr<ASTNode> Parser::factor() {
   auto tok = readToken();
   switch (tok->type()) {
@@ -109,7 +116,9 @@ Ptr<ASTNode> Parser::factor() {
           SI_ASSERT_MSG(0, "bad token id");
       }
     }
-
+    case TokenType::kId: {
+      return astVar(tok->val());
+    }
     default:
       SI_ASSERT_MSG(0, "bad factor");
   }
