@@ -4,6 +4,8 @@
 #include <optional>
 #include <string>
 
+#include "util.h"
+
 namespace SI {
 namespace Interpreter {
 
@@ -25,7 +27,7 @@ enum class TokenId {
 #undef op
 };
 
-class Token {
+class Token : public SI::util::Noncopyable {
  public:
   Token(TokenType type, TokenId id) : type_(type), id_(id) {}
   Token(TokenType type, TokenId id, const std::string &val);
