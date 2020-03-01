@@ -147,21 +147,6 @@ void Parser::eatToken() {
   peekToken_ = std::nullopt;
 }
 
-bool Parser::next(ASTNodeType type) const {
-  // if (type == ASTNodeType::kCompound) {
-  //   auto tok = peekToken();
-  //   return tok->isVar();
-  // }
-
-  // if (type == ASTNodeType::kDeclaration) {
-  // }
-
-  // SI_ASSERT_MSG(0, "unsupported more() type");
-  // TODO : implement
-  SI_ASSERT(0);
-  return false;
-}
-
 Ptr<ASTNode> Parser::term() {
   auto left = factor();
 
@@ -216,11 +201,6 @@ Ptr<ASTNode> Parser::assignmentStatement() {
   }
 
   eatKeyword(TokenId::kAssign);
-  // auto assign = readToken();
-  // if (!assign->isKeyword(TokenId::kAssign)) {
-  //   SI_ASSERT_MSG(0, "bad assignmentStatement");
-  // }
-
   return astAssignment(astVar(var->val()), expr());
 }
 
@@ -319,12 +299,10 @@ Ptr<ASTNode> Parser::empty() { return astEmpty(); }
 Ptr<ASTNode> Parser::statement() {
   auto tok = peekToken();
   if (tok->isKeyword(TokenId::kBegin)) {
-    // todo : use next(type)
     return compoundStatement();
   }
 
   if (tok->isVar()) {
-    // todo : use next(type)
     return assignmentStatement();
   }
 

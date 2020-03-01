@@ -32,7 +32,6 @@ class Parser {
   std::unique_ptr<Token> readToken();
   const Token *peekToken();
   void eatToken();
-  bool next(ASTNodeType type) const;
   Ptr<ASTNode> readNumber(const Token &tok) const;
 
   static Ptr<ASTNode> astNumber(const std::string &num);
