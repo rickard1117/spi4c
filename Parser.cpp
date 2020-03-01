@@ -84,11 +84,13 @@ void Parser::eatKeyword(TokenId expect) {
 std::string Parser::eatVar() {
   auto tok = readToken();
   if (!tok->isVar()) {
-    SI_ASSERT_MSG(0, "current token's not var");
+    SI_ASSERT_MSG(
+        0, "current token's not var : [" +
+               std::to_string(static_cast<std::size_t>(tok->type())) + ", " +
+               std::to_string(static_cast<std::size_t>(tok->id())) + "]");
   }
   return tok->val();
 }
-
 
 // factor : PLUS factor
 //            | MINUS factor
@@ -116,9 +118,8 @@ Ptr<ASTNode> Parser::factor() {
           SI_ASSERT_MSG(0, "bad token id");
       }
     }
-    case TokenType::kId: {
+    case TokenType::kId:
       return astVar(tok->val());
-    }
     default:
       SI_ASSERT_MSG(0, "bad factor");
   }
@@ -257,24 +258,22 @@ std::vector<Ptr<ASTNode>> Parser::declarations() {
   }
   eatKeyword(TokenId::kVardecl);
 
-  auto decl = variableDeclaration();
-  if (decl.empty()) {
-    SI_ASSERT_MSG(0, "bad declaration");
-  }
-
+  std::vector<Ptr<ASTNode>> decl;
   do {
-    eatKeyword(TokenId::kSemi);
+    decl = variableDeclaration();
     decls.insert(std::end(decls), std::make_move_iterator(decl.begin()),
                  std::make_move_iterator(decl.end()));
-    decl = variableDeclaration();
-  } while (!decl.empty());
+    eatKeyword(TokenId::kSemi);
+    tok = peekToken();
+  } while (tok->isVar());
 
   return decls;
 }
 
 // block : declarations compound_statement
 Ptr<ASTNode> Parser::block() {
-  return astBlock(declarations(), compoundStatement());
+  auto decls = declarations();
+  return astBlock(std::move(decls), compoundStatement());
 }
 
 // program : PROGRAM variable SEMI block DOT

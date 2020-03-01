@@ -19,6 +19,7 @@ class ASTNodeVisitor {
   void visitProgram(const class Program &prog);
   void visitBlock(const class Block &block);
   void visitDecl(const class Declaration &decl);
+  int visitVar(const class Var &var);
   const std::map<std::string, int> &symbols() const { return symbolTable_; }
 
  private:

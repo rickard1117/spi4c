@@ -110,6 +110,8 @@ std::unique_ptr<Token> Lexer::getNextToken() {
       return make_keyword(TokenId::kDot);
     case ';':
       return make_keyword(TokenId::kSemi);
+    case ',':
+      return make_keyword(TokenId::kComma);
     case 'a' ... 'z':
     case 'A' ... 'Z':
       return read_ident(c);

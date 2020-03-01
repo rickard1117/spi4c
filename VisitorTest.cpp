@@ -42,19 +42,19 @@ TEST(TestParser, MultiParents) {
 
 TEST(TestParser, SimpleUnary) { ASSERT_EQ(parseArithmeticExpr("-3"), -3); }
 
-static std::map<std::string, int> parseAssignmentStatement(
-    const std::string &formula) {
-  Parser p{formula};
-  auto ast = p.assignmentStatement();
-  ASTNodeVisitor visitor;
-  visitor.visitAssignment(ast->fetch<Assignment>());
-  return visitor.symbols();
-}
+// static std::map<std::string, int> parseAssignmentStatement(
+//     const std::string &formula) {
+//   Parser p{formula};
+//   auto ast = p.assignmentStatement();
+//   ASTNodeVisitor visitor;
+//   visitor.visitAssignment(ast->fetch<Assignment>());
+//   return visitor.symbols();
+// }
 
-TEST(TestParser, SimpleAssignment) {
-  auto table = parseAssignmentStatement("abc := 3");
-  ASSERT_EQ(table["abc"], 3);
-}
+// TEST(TestParser, SimpleAssignment) {
+//   auto table = parseAssignmentStatement("abc := 3");
+//   ASSERT_EQ(table["abc"], 3);
+// }
 
 std::map<std::string, int> ParserProgram(const std::string &s) {
   Parser p{s};
@@ -64,14 +64,14 @@ std::map<std::string, int> ParserProgram(const std::string &s) {
   return visitor.symbols();
 }
 
-TEST(TestParser, MultiAssignCompoundStatementProgram) {
-  const std::string s = "PROGRAM part3;BEGIN abc:=3; def := 4; ghi:= 5 END.";
-  auto table = ParserProgram(s);
+// TEST(TestParser, MultiAssignCompoundStatementProgram) {
+//   const std::string s = "PROGRAM part3;BEGIN abc:=3; def := 4; ghi:= 5 END.";
+//   auto table = ParserProgram(s);
 
-  ASSERT_EQ(table["abc"], 3);
-  ASSERT_EQ(table["def"], 4);
-  ASSERT_EQ(table["ghi"], 5);
-}
+//   ASSERT_EQ(table["abc"], 3);
+//   ASSERT_EQ(table["def"], 4);
+//   ASSERT_EQ(table["ghi"], 5);
+// }
 
 // TEST(TestParser, UseDefinedVar) {
 //   const std::string s = "PROGRAM part1;BEGIN A1 := 1; b := A1 + 2 END.";
@@ -80,29 +80,28 @@ TEST(TestParser, MultiAssignCompoundStatementProgram) {
 //   ASSERT_EQ(table["b"], 3);
 // }
 
-
-
-TEST(TestParser, MultiCompoundStatementProgram) {
+TEST(TestParser, DeclAndCompound) {
   const std::string s = R"(
     PROGRAM part2;
+    VAR
+      number     : INTEGER;
+      a, b, c, x : INTEGER;
     BEGIN
-      abc:=3;
-        BEGIN
-          xxx:=123;
-          yyy:=234
-        END;;
-      def := 4;
-      ghi:= 5;;
+      number := 3;
+      BEGIN
+        c := 0;
+        x := c + 3;
+      END;
+      a := 4;
     END.
   )";
 
   auto table = ParserProgram(s);
 
-  ASSERT_EQ(table["abc"], 3);
-  ASSERT_EQ(table["def"], 4);
-  ASSERT_EQ(table["ghi"], 5);
-  ASSERT_EQ(table["xxx"], 123);
-  ASSERT_EQ(table["yyy"], 234);
+  ASSERT_EQ(table["number"], 3);
+  ASSERT_EQ(table["a"], 4);
+  ASSERT_EQ(table["c"], 0);
+  ASSERT_EQ(table["x"], 3);
 }
 
 // TEST(TestParser, TestOneIntVarDeclarationsBlock) {

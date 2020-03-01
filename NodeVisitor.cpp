@@ -39,7 +39,9 @@ void ASTNodeVisitor::visitBlock(const Block &block) {
   visitCompound(block.compound_->fetch<Compound>());
 }
 
-void ASTNodeVisitor::visitDecl(const Declaration &decl) {}
+void ASTNodeVisitor::visitDecl(const Declaration &decl) {
+  symbolTable_[decl.var_] = 0;
+}
 
 int ASTNodeVisitor::visitBinOp(const BinaryOp &op) {
   switch (op.type_) {
@@ -71,24 +73,37 @@ int ASTNodeVisitor::visitNumber(const Number &num) {
   return std::stoi(num.val_);
 }
 
+int ASTNodeVisitor::visitVar(const Var &var) {
+  auto itr = symbolTable_.find(var.id_);
+  if (itr == symbolTable_.cend()) {
+    SI_ASSERT_MSG(0, "var not defined ! : " + var.id_);
+  }
+  return symbolTable_[var.id_];
+}
+
 int ASTNodeVisitor::visitArithExpr(const ASTNode &ast) {
   switch (ast.type()) {
     case ASTNodeType::kBinaryOp:
-      // auto binop = ast.fetch<BinaryOp>();
       return visitBinOp(ast.fetch<BinaryOp>());
     case ASTNodeType::kNumber:
       return visitNumber(ast.fetch<Number>());
     case ASTNodeType::kUnaryOp:
       return visitUnaryOp(ast.fetch<UnaryOp>());
+    case ASTNodeType::kVar:
+      return visitVar(ast.fetch<Var>());
     default:
       SI_ASSERT_MSG(0,
-                    "assignment right children type not match!!! " +
+                    "visitArithExpr type not match!!! " +
                         std::to_string(static_cast<std::size_t>(ast.type())));
   }
 }
 
 void ASTNodeVisitor::visitAssignment(const Assignment &ast) {
-  symbolTable_[ast.var_->fetch<Var>().id_] = visitArithExpr(*ast.expr_);
+  const auto &id = ast.var_->fetch<Var>().id_;
+  if(symbolTable_.find(id) == symbolTable_.cend()) {
+    SI_ASSERT_MSG(0, "var not defined ! : " + id);
+  }
+  symbolTable_[id] = visitArithExpr(*ast.expr_);
 }
 
 }  // namespace Interpreter
