@@ -1,14 +1,16 @@
+#include "Interpreter.h"
 #include "Lexer.h"
-#include "NodeVisitor.h"
 #include "Parser.h"
+#include "SymbolTable.h"
+#include "SymbolTableBuilder.h"
 #include "gtest/gtest.h"
 
-using namespace SI::Interpreter;
+using namespace SI;
 
 static int parseArithmeticExpr(const std::string &formula) {
   Parser p{formula};
   auto ast = p.expr();
-  ASTNodeVisitor visitor;
+  Interpreter visitor;
   return visitor.visitArithExpr(*ast);
 }
 
@@ -46,7 +48,7 @@ TEST(TestParser, SimpleUnary) { ASSERT_EQ(parseArithmeticExpr("-3"), -3); }
 //     const std::string &formula) {
 //   Parser p{formula};
 //   auto ast = p.assignmentStatement();
-//   ASTNodeVisitor visitor;
+//   Interpreter visitor;
 //   visitor.visitAssignment(ast->fetch<Assignment>());
 //   return visitor.symbols();
 // }
@@ -59,7 +61,7 @@ TEST(TestParser, SimpleUnary) { ASSERT_EQ(parseArithmeticExpr("-3"), -3); }
 std::map<std::string, int> ParserProgram(const std::string &s) {
   Parser p{s};
   auto ast = p.program();
-  ASTNodeVisitor visitor;
+  Interpreter visitor;
   visitor.visitProgram(ast->fetch<Program>());
   return visitor.symbols();
 }
@@ -73,11 +75,53 @@ std::map<std::string, int> ParserProgram(const std::string &s) {
 //   ASSERT_EQ(table["ghi"], 5);
 // }
 
-// TEST(TestParser, UseDefinedVar) {
-//   const std::string s = "PROGRAM part1;BEGIN A1 := 1; b := A1 + 2 END.";
+TEST(TestParser, UseDefinedVar) {
+  const std::string s = R"(
+    PROGRAM part1;
+    VAR
+      A1, b : INTEGER;
+    BEGIN 
+      A1 := 1; 
+      b := A1 + 2;
+    END.
+  )";
+  auto table = ParserProgram(s);
+  ASSERT_EQ(table["A1"], 1);
+  ASSERT_EQ(table["b"], 3);
+}
+
+void CheckSymbolTable(const std::string &s) {
+  Parser p{s};
+  auto ast = p.program();
+  SymbolTableBuilder visitor{std::make_shared<SymbolTable>()};
+  visitor.visitProgram(ast->fetch<Program>());
+}
+
+TEST(TestParser, UndefineVar) {
+  const std::string s = R"(
+    PROGRAM part1;
+    VAR
+      A1 : INTEGER;
+    BEGIN 
+      A2 := 3;
+    END.
+  )";
+  EXPECT_ANY_THROW(CheckSymbolTable(s));
+}
+
+// TEST(TestParser, IntegerDiv) {
+//   const std::string s = R"(
+//     PROGRAM part2;
+//     VAR
+//       number     : INTEGER;
+//     BEGIN
+//       number := 5 DIV 3;
+//     END.
+//   )";
+
 //   auto table = ParserProgram(s);
-//   ASSERT_EQ(table["A1"], 1);
-//   ASSERT_EQ(table["b"], 3);
+
+//   ASSERT_EQ(table["number"], 2);
 // }
 
 TEST(TestParser, DeclAndCompound) {

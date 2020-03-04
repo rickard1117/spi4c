@@ -8,7 +8,6 @@
 // #include "AST.h"
 
 namespace SI {
-namespace Interpreter {
 class Lexer {
  public:
   Lexer() : idx_(0) {}
@@ -41,7 +40,6 @@ class Lexer {
   std::size_t idx_;
 };
 
-}  // namespace Interpreter
 }  // namespace SI
 
 #endif  // LEXER_H_

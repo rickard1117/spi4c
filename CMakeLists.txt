@@ -14,7 +14,25 @@ include_directories(${GTEST_DIR_INC} ${GMOCK_DIR_INC})
 link_directories(${GTEST_DIR_LIB})
 
 
-set(SRC_FILES Token.h Token.cpp Lexer.h Lexer.cpp AST.h AST.cpp Parser.h Parser.cpp NodeVisitor.h NodeVisitor.cpp util.h util.cpp)
+set(SRC_FILES Token.h 
+Token.cpp 
+Lexer.h 
+Lexer.cpp 
+AST.h 
+AST.cpp 
+Parser.h 
+Parser.cpp 
+Interpreter.h
+Interpreter.cpp
+Symbol.h
+SymbolTable.h
+SymbolTable.cpp
+SymbolTableBuilder.h
+SymbolTableBuilder.cpp
+util.h 
+util.cpp
+Type.h
+Type.cpp)
 
 add_executable(LexerTest ${SRC_FILES} LexerTest.cpp)
 target_link_libraries(LexerTest libgtest.a pthread)

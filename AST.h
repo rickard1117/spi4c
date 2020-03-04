@@ -7,10 +7,10 @@
 #include <vector>
 
 #include "Token.h"
+#include "Type.h"
 #include "util.h"
 
 namespace SI {
-namespace Interpreter {
 
 using SI::util::Noncopyable;
 using SI::util::Ptr;
@@ -36,12 +36,14 @@ class Empty : public Noncopyable {
 
 class Number : public Noncopyable {
  public:
-  Number(std::string &&val) : val_(val) {}
-  Number(const std::string &val) : val_(val) {}
+  Number(const std::string &val);
 
  private:
-  friend class ASTNodeVisitor;
-  const std::string val_;
+  friend class Interpreter;
+  friend class SymbolTableBuilder;
+  Type evalType_;
+  Type promoteType_;
+  std::variant<int, float> num_;
 };
 
 class Program : public Noncopyable {
@@ -49,7 +51,8 @@ class Program : public Noncopyable {
   Program(Ptr<ASTNode> block) : block_(std::move(block)) {}
 
  private:
-  friend class ASTNodeVisitor;
+  friend class Interpreter;
+  friend class SymbolTableBuilder;
   Ptr<ASTNode> block_;
 };
 
@@ -59,7 +62,8 @@ class Block : public Noncopyable {
       : decls_(std::move(decls)), compound_(std::move(compound)) {}
 
  private:
-  friend class ASTNodeVisitor;
+  friend class Interpreter;
+  friend class SymbolTableBuilder;
   std::vector<Ptr<ASTNode>> decls_;
   Ptr<ASTNode> compound_;
 };
@@ -70,7 +74,8 @@ class Compound : public Noncopyable {
       : children_(std::move(children)) {}
 
  private:
-  friend class ASTNodeVisitor;
+  friend class Interpreter;
+  friend class SymbolTableBuilder;
   std::vector<Ptr<ASTNode>> children_;
 };
 
@@ -80,7 +85,8 @@ class Assignment : public Noncopyable {
       : var_(std::move(var)), expr_(std::move(expr)) {}
 
  private:
-  friend class ASTNodeVisitor;
+  friend class Interpreter;
+  friend class SymbolTableBuilder;
   Ptr<ASTNode> var_;
   Ptr<ASTNode> expr_;
 };
@@ -92,7 +98,8 @@ class UnaryOp : public Noncopyable {
       : type_(type), operand_(std::move(operand)) {}
 
  private:
-  friend class ASTNodeVisitor;
+  friend class Interpreter;
+  friend class SymbolTableBuilder;
   UnaryOpType type_;
   Ptr<ASTNode> operand_;
 };
@@ -104,7 +111,8 @@ class BinaryOp : public Noncopyable {
       : type_(type), left_(std::move(left)), right_(std::move(right)) {}
 
  private:
-  friend class ASTNodeVisitor;
+  friend class Interpreter;
+  friend class SymbolTableBuilder;
   BinaryOpType type_;
   Ptr<ASTNode> left_;
   Ptr<ASTNode> right_;
@@ -115,7 +123,8 @@ class Var : public Noncopyable {
   Var(const std::string &val) : id_(val) {}
 
  private:
-  friend class ASTNodeVisitor;
+  friend class Interpreter;
+  friend class SymbolTableBuilder;
   const std::string id_;
 };
 
@@ -126,7 +135,8 @@ class Declaration : public Noncopyable {
       : var_(var), type_(type) {}
 
  private:
-  friend class ASTNodeVisitor;
+  friend class Interpreter;
+  friend class SymbolTableBuilder;
   const std::string var_;
   const DeclarationType type_;
 };
@@ -152,12 +162,12 @@ class ASTNode {
   }
 
  private:
-  friend class ASTNodeVisitor;
+  friend class Interpreter;
+  friend class SymbolTableBuilder;
   const ASTNodeType type_;
   std::variant<AST_TYPE(STD_VARIANT, COMMA)> v_;
 };
 
-}  // namespace Interpreter
 }  // namespace SI
 
 #endif  // AST_H_

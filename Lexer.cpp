@@ -4,7 +4,6 @@
 #include "util.h"
 
 namespace SI {
-namespace Interpreter {
 using namespace SI::util;
 
 char Lexer::current() const {
@@ -37,11 +36,22 @@ bool Lexer::next(char expect) {
 std::unique_ptr<Token> Lexer::read_number(char c) {
   SI_ASSERT(isdigit(c));
   std::string val;
-  while (isdigit(c)) {
-    val.push_back(c);
-    c = readc();
+  auto dotflag = false;
+  char last = c;
+  for (;; val.push_back(c), last = c, c = readc()) {
+    if (isdigit(c)) {
+      continue;
+    }
+    if (c == '.' && !dotflag) {
+      dotflag = true;
+      continue;
+    }
+    break;
   }
   back();
+  if (last == '.') {
+    back();
+  }
 
   return std::make_unique<Token>(TokenType::kNumber, TokenId::kNull,
                                  std::move(val));
@@ -121,5 +131,4 @@ std::unique_ptr<Token> Lexer::getNextToken() {
   SI_ASSERT(0);
 }
 
-}  // namespace Interpreter
 }  // namespace SI

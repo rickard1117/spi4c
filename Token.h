@@ -7,7 +7,6 @@
 #include "util.h"
 
 namespace SI {
-namespace Interpreter {
 
 enum class TokenType {
   kId,
@@ -31,7 +30,6 @@ class Token : public SI::util::Noncopyable {
  public:
   Token(TokenType type, TokenId id) : type_(type), id_(id) {}
   Token(TokenType type, TokenId id, const std::string &val);
-  Token(TokenType type, TokenId id, const std::string &&val);
 
   static TokenId keyword2id(const std::string &id);
 
@@ -50,7 +48,6 @@ class Token : public SI::util::Noncopyable {
   std::optional<std::string> val_;
 };
 
-}  // namespace Interpreter
 }  // namespace SI
 
 #endif  // SI_TOKEN_H_

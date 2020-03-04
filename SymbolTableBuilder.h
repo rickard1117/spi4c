@@ -1,15 +1,14 @@
-#ifndef NODE_VISITOR_H__
-#define NODE_VISITOR_H__
+#ifndef SYMBOL_TABLE_BUILDER_H__
+#define SYMBOL_TABLE_BUILDER_H__
 
-#include <map>
-#include <string>
+#include "ASTVisitorBase.h"
 
 namespace SI {
-namespace Interpreter {
 
-class ASTNodeVisitor {
+class SymbolTableBuilder : public ASTVisitorBase {
  public:
-  ASTNodeVisitor() = default;
+  SymbolTableBuilder(std::shared_ptr<class SymbolTable> table)
+      : table_(table) {}
   void visitCompound(const class Compound &com);
   void visitAssignment(const class Assignment &assign);
   int visitArithExpr(const class ASTNode &ast);
@@ -20,13 +19,11 @@ class ASTNodeVisitor {
   void visitBlock(const class Block &block);
   void visitDecl(const class Declaration &decl);
   int visitVar(const class Var &var);
-  const std::map<std::string, int> &symbols() const { return symbolTable_; }
 
  private:
-  std::map<std::string, int> symbolTable_;
+  std::shared_ptr<class SymbolTable> table_;
 };
 
-}  // namespace Interpreter
 }  // namespace SI
 
-#endif  // NODE_VISITOR_H__
+#endif  // SYMBOL_TABLE_BUILDER_H__

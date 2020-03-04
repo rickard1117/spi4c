@@ -4,9 +4,24 @@
 #include "util.h"
 
 namespace SI {
-namespace Interpreter {
 
 using namespace SI::util;
 
-}  // namespace Interpreter
+namespace {
+bool isFloat(const std::string &val) {
+  auto index = val.find('.');
+  return index != std::string::npos;
+}
+}  // namespace
+
+Number::Number(const std::string &val) {
+  if (isFloat(val)) {
+    num_ = std::stof(val);
+    evalType_ = _real;
+  } else {
+    num_ = std::stoi(val);
+    evalType_ = _int;
+  }
+}
+
 }  // namespace SI

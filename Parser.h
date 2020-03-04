@@ -10,7 +10,6 @@
 #include "Token.h"
 
 namespace SI {
-namespace Interpreter {
 class Parser {
  public:
   Parser(const std::string &s);
@@ -53,6 +52,5 @@ class Parser {
   Lexer lexer_;
   std::optional<std::unique_ptr<Token>> peekToken_;
 };
-}  // namespace Interpreter
 }  // namespace SI
 #endif  // PARSER_H_

@@ -4,7 +4,6 @@
 #include "util.h"
 
 namespace SI {
-namespace Interpreter {
 using namespace SI::util;
 
 #define IN_PLACE_TYPE(name) \
@@ -309,5 +308,4 @@ Ptr<ASTNode> Parser::statement() {
   return empty();
 }
 
-}  // namespace Interpreter
 }  // namespace SI

@@ -1,7 +1,7 @@
 #include "Lexer.h"
 #include "gtest/gtest.h"
 
-using namespace SI::Interpreter;
+using namespace SI;
 
 TEST(Lexer, TestSingleEOF) {
   Lexer l{""};
@@ -28,11 +28,23 @@ TEST(Lexer, TestMultiCharNum) {
   ASSERT_EQ(t->val(), "223");
 }
 
-// TEST(Lexer, TestRealNum) {
-//   Lexer l{"123.456"};
-//   auto t = l.getNextToken();
+TEST(Lexer, TestRealNum) {
+  Lexer l{"0.456"};
+  auto t = l.getNextToken();
+  ASSERT_EQ(t->type(), TokenType::kNumber);
+  ASSERT_EQ(t->val(), "0.456");
+}
 
-// }
+TEST(Lexer, TestBadReal) {
+  Lexer l{"123."};
+  auto t = l.getNextToken();
+  ASSERT_EQ(t->type(), TokenType::kNumber);
+  ASSERT_EQ(t->val(), "123");
+
+  t = l.getNextToken();
+  ASSERT_EQ(t->type(), TokenType::kKeyword);
+  ASSERT_EQ(t->id(), TokenId::kDot);
+}
 
 TEST(Lexer, TestSingleOp) {
   Lexer l{"*"};
