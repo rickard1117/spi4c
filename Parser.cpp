@@ -159,7 +159,13 @@ Ptr<ASTNode> Parser::term() {
     }
     if (tok->id() == TokenId::kSlash) {
       eatToken();
-      left = astBinOp(BinaryOpType::kDiv, std::move(left), factor());
+      left = astBinOp(BinaryOpType::kRealdIV, std::move(left), factor());
+      tok = peekToken();
+      continue;
+    }
+    if (tok->id() == TokenId::kIntDiv) {
+      eatToken();
+      left = astBinOp(BinaryOpType::kIntDiv, std::move(left), factor());
       tok = peekToken();
       continue;
     }

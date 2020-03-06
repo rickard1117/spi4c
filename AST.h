@@ -104,7 +104,7 @@ class UnaryOp : public Noncopyable {
   Ptr<ASTNode> operand_;
 };
 
-enum class BinaryOpType { kAdd, kSub, kMul, kDiv };
+enum class BinaryOpType { kAdd, kSub, kMul, kIntDiv, kRealdIV };
 class BinaryOp : public Noncopyable {
  public:
   BinaryOp(BinaryOpType type, Ptr<ASTNode> left, Ptr<ASTNode> right)
@@ -141,6 +141,11 @@ class Declaration : public Noncopyable {
   friend class SymbolTableBuilder;
   const std::string var_;
   DeclarationType type_;
+};
+
+class RealDivOp {
+ public:
+  RealDivOp() = default;
 };
 
 enum class ASTNodeType { AST_TYPE(MAKE_ENUM, COMMA) };

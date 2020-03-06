@@ -25,17 +25,17 @@ TEST(TestParser, MultiNumPlusMinusFormula) {
 }
 
 TEST(TestParser, MultiMixedFormula) {
-  ASSERT_EQ(parseArithmeticExpr(" 1 + 10 * 10 - 6 / 2 + 20"), 118);
+  ASSERT_EQ(parseArithmeticExpr(" 1 + 10 * 10 - 6 / 2 + 20"), 118.0);
 }
 
 TEST(TestParser, MixedWithParentFormula) {
-  ASSERT_EQ(parseArithmeticExpr(" (1 + 2) * 3 + 4 / 2"), 11);
+  ASSERT_EQ(parseArithmeticExpr(" (1 + 2) * 3 + 4 / 2"), 11.0);
 }
 
 TEST(TestParser, ComplicatedFormula) {
   ASSERT_EQ(parseArithmeticExpr(
                 "7 + 3 * (10 / (12 / (3 + 1) - 1)) / (2 + 3) - 5 - 3 + (8)"),
-            10);
+            10.0);
 }
 
 TEST(TestParser, MultiParents) {
@@ -130,20 +130,24 @@ TEST(TestParser, TestRealArith) {
   ASSERT_EQ(table["c"], 12.8);
 }
 
-// TEST(TestParser, IntegerDiv) {
-//   const std::string s = R"(
-//     PROGRAM part2;
-//     VAR
-//       number     : INTEGER;
-//     BEGIN
-//       number := 5 DIV 3;
-//     END.
-//   )";
+TEST(TestParser, IntegerAndRealDiv) {
+  const std::string s = R"(
+    PROGRAM part2;
+    VAR
+      number     : INTEGER;
+      real       : REAL;
+    BEGIN
+      number := 5 DIV 2;
+      real := 5 / 2;
+    END.
+  )";
 
-//   auto table = ParserProgram(s);
+  auto table = ParserProgram(s);
+  // auto num = table["number"];
 
-//   ASSERT_EQ(table["number"], 2);
-// }
+  ASSERT_EQ(table["number"], 2);
+  ASSERT_EQ(table["real"], 2.5);
+}
 
 TEST(TestParser, DeclAndCompound) {
   const std::string s = R"(

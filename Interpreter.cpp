@@ -50,8 +50,13 @@ GeneralArithVal Interpreter::visitBinOp(const BinaryOp &op) {
       return visitArithExpr(*op.left_) - visitArithExpr(*op.right_);
     case BinaryOpType::kMul:
       return visitArithExpr(*op.left_) * visitArithExpr(*op.right_);
-    case BinaryOpType::kDiv:
-      return visitArithExpr(*op.left_) / visitArithExpr(*op.right_);
+    case BinaryOpType::kIntDiv: {
+      auto result = visitArithExpr(*op.left_) / visitArithExpr(*op.right_);
+      return static_cast<int>(result.getreal());
+    }
+    case BinaryOpType::kRealdIV:
+      return visitArithExpr(*op.left_).getreal() /
+             visitArithExpr(*op.right_).getreal();
     default:
       SI_ASSERT(0);
   }
