@@ -36,8 +36,7 @@ Ptr<ASTNode> Parser::astBlock(std::vector<Ptr<ASTNode>> decls,
 
 Ptr<ASTNode> Parser::astDeclaration(const std::string &val) {
   return std::make_unique<ASTNode>(ASTNodeType::kDeclaration,
-                                   IN_PLACE_TYPE(Declaration), val,
-                                   DeclarationType::kInt);
+                                   IN_PLACE_TYPE(Declaration), val);
 }
 
 Ptr<ASTNode> Parser::astProgram(Ptr<ASTNode> block) {
@@ -72,7 +71,7 @@ Ptr<ASTNode> Parser::readNumber(const Token &tok) const {
 void Parser::eatKeyword(TokenId expect) {
   auto tok = readToken();
   if (tok->type() != TokenType::kKeyword || tok->id() != expect) {
-    std::cout << "text remaning : " << lexer_.remaning() << '\n';
+    std::cout << "text remaning : \n" << lexer_.remaning() << '\n';
     SI_ASSERT_MSG(0, "unexpect keyword , expect : " +
                          std::to_string(static_cast<std::size_t>(expect)) +
                          ", we but got : " +
@@ -218,14 +217,25 @@ std::vector<Ptr<ASTNode>> Parser::variableDeclaration() {
   }
 
   eatKeyword(TokenId::kColon);
-  typeSpec();
+  auto t = typeSpec();
+  for (auto &decl : decls) {
+    decl->fetch<Declaration>().setType(t);
+  }
 
   return decls;
 }
 
-Ptr<ASTNode> Parser::typeSpec() {
-  eatKeyword(TokenId::kInteger);
-  return nullptr;
+DeclarationType Parser::typeSpec() {
+  auto tok = readToken();
+  if (tok->isKeyword(TokenId::kInteger)) {
+    return DeclarationType::kInt;
+  }
+
+  if (tok->isKeyword(TokenId::kReal)) {
+    return DeclarationType::kReal;
+  }
+
+  throw "bad type spec";
 }
 
 // declarations : VAR (variable_declaration SEMI)+ | empty

@@ -1,6 +1,8 @@
 
 #include "AST.h"
 
+#include <iostream>
+
 #include "util.h"
 
 namespace SI {
@@ -16,7 +18,7 @@ bool isFloat(const std::string &val) {
 
 Number::Number(const std::string &val) {
   if (isFloat(val)) {
-    num_ = std::stof(val);
+    num_ = std::stod(val);
     evalType_ = _real;
   } else {
     num_ = std::stoi(val);

@@ -14,18 +14,20 @@ class Interpreter : public ASTVisitorBase {
  public:
   void visitCompound(const class Compound &com) override;
   void visitAssignment(const class Assignment &assign) override;
-  int visitArithExpr(const class ASTNode &ast) override;
-  int visitBinOp(const class BinaryOp &op) override;
-  int visitUnaryOp(const class UnaryOp &op) override;
-  int visitNumber(const class Number &num) override;
+  GeneralArithVal visitArithExpr(const class ASTNode &ast) override;
+  GeneralArithVal visitBinOp(const class BinaryOp &op) override;
+  GeneralArithVal visitUnaryOp(const class UnaryOp &op) override;
+  GeneralArithVal visitNumber(const class Number &num) override;
   void visitProgram(const class Program &prog) override;
   void visitBlock(const class Block &block) override;
   void visitDecl(const class Declaration &decl) override;
-  int visitVar(const class Var &var) override;
-  const std::map<std::string, int> &symbols() const { return symbolTable_; }
+  GeneralArithVal visitVar(const class Var &var) override;
+  const std::map<std::string, GeneralArithVal> &symbols() const {
+    return symbolTable_;
+  }
 
  private:
-  std::map<std::string, int> symbolTable_;
+  std::map<std::string, GeneralArithVal> symbolTable_;
 };
 
 }  // namespace SI

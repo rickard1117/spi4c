@@ -14,37 +14,59 @@ TEST(Lexer, TestSingleSpace) {
   ASSERT_EQ(l.getNextToken()->type(), TokenType::kEof);
 }
 
-TEST(Lexer, TestOneCharNum) {
+TEST(Lexer, TestOneCharInteger) {
   Lexer l{"2"};
   auto t = l.getNextToken();
   ASSERT_EQ(t->type(), TokenType::kNumber);
   ASSERT_EQ(t->val(), "2");
 }
 
-TEST(Lexer, TestMultiCharNum) {
+TEST(Lexer, TestMultiCharInteger) {
   Lexer l{"223"};
   auto t = l.getNextToken();
   ASSERT_EQ(t->type(), TokenType::kNumber);
   ASSERT_EQ(t->val(), "223");
 }
 
+// TEST(Lexer, TestReal) {
+//   Lexer l{"223.223"};
+//   auto t = l.getNextToken();
+//   ASSERT_EQ(t->type(), TokenType::kNumber);
+//   ASSERT_EQ(t->val(), "223.223");
+// }
+
 TEST(Lexer, TestRealNum) {
-  Lexer l{"0.456"};
+  Lexer l{"0.456 + 2.335 - 1.012"};
   auto t = l.getNextToken();
   ASSERT_EQ(t->type(), TokenType::kNumber);
   ASSERT_EQ(t->val(), "0.456");
-}
 
-TEST(Lexer, TestBadReal) {
-  Lexer l{"123."};
-  auto t = l.getNextToken();
+  t = l.getNextToken();
+  ASSERT_TRUE(t->isKeyword(TokenId::kPlus));
+
+  t = l.getNextToken();
   ASSERT_EQ(t->type(), TokenType::kNumber);
-  ASSERT_EQ(t->val(), "123");
+  ASSERT_EQ(t->val(), "2.335");
 
   t = l.getNextToken();
   ASSERT_EQ(t->type(), TokenType::kKeyword);
-  ASSERT_EQ(t->id(), TokenId::kDot);
+  ASSERT_TRUE(t->isKeyword(TokenId::kMinus));
+
+  t = l.getNextToken();
+  ASSERT_EQ(t->type(), TokenType::kNumber);
+  ASSERT_EQ(t->val(), "1.012");
 }
+
+// TEST(Lexer, TestBadReal) {
+//   Lexer l{"123."};
+//   auto t = l.getNextToken();
+//   ASSERT_EQ(t->type(), TokenType::kNumber);
+//   ASSERT_EQ(t->val(), "123");
+
+//   t = l.getNextToken();
+//   ASSERT_EQ(t->type(), TokenType::kKeyword);
+//   ASSERT_EQ(t->id(), TokenId::kDot);
+// }
 
 TEST(Lexer, TestSingleOp) {
   Lexer l{"*"};

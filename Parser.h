@@ -25,7 +25,7 @@ class Parser {
   Ptr<ASTNode> block();
   std::vector<Ptr<ASTNode>> declarations();
   std::vector<Ptr<ASTNode>> variableDeclaration();
-  Ptr<ASTNode> typeSpec();
+  DeclarationType typeSpec();
 
  private:
   std::unique_ptr<Token> readToken();

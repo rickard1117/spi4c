@@ -42,7 +42,7 @@ void Interpreter::visitDecl(const Declaration &decl) {
   symbolTable_[decl.var_] = 0;
 }
 
-int Interpreter::visitBinOp(const BinaryOp &op) {
+GeneralArithVal Interpreter::visitBinOp(const BinaryOp &op) {
   switch (op.type_) {
     case BinaryOpType::kAdd:
       return visitArithExpr(*op.left_) + visitArithExpr(*op.right_);
@@ -57,7 +57,7 @@ int Interpreter::visitBinOp(const BinaryOp &op) {
   }
 }
 
-int Interpreter::visitUnaryOp(const UnaryOp &op) {
+GeneralArithVal Interpreter::visitUnaryOp(const UnaryOp &op) {
   switch (op.type_) {
     case UnaryOpType::kMinus:
       return (-1) * visitArithExpr(*op.operand_);
@@ -68,11 +68,17 @@ int Interpreter::visitUnaryOp(const UnaryOp &op) {
   }
 }
 
-int Interpreter::visitNumber(const Number &num) {
-  return std::get<int>(num.num_);
+GeneralArithVal Interpreter::visitNumber(const Number &num) {
+  if (num.evalType_ == TypeKind::kInt) {
+    return std::get<int>(num.num_);
+  }
+  if (num.evalType_ == TypeKind::kReal) {
+    return std::get<double>(num.num_);
+  }
+  throw "Number type not match";
 }
 
-int Interpreter::visitVar(const Var &var) {
+GeneralArithVal Interpreter::visitVar(const Var &var) {
   auto itr = symbolTable_.find(var.id_);
   if (itr == symbolTable_.cend()) {
     SI_ASSERT_MSG(0, "var not defined ! : " + var.id_);
@@ -80,7 +86,7 @@ int Interpreter::visitVar(const Var &var) {
   return symbolTable_[var.id_];
 }
 
-int Interpreter::visitArithExpr(const ASTNode &ast) {
+GeneralArithVal Interpreter::visitArithExpr(const ASTNode &ast) {
   switch (ast.type()) {
     case ASTNodeType::kBinaryOp:
       return visitBinOp(ast.fetch<BinaryOp>());

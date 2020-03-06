@@ -8,9 +8,9 @@ const Type arithmeticResultType[3][3] = {
     /* int  */ {_null, _int, _real},
     /* real */ {_null, _real, _real}};
 
-extern const Type _null = Type(Type::Kind::kNull);
-extern const Type _int = Type(Type::Kind::kInt);
-extern const Type _real = Type(Type::Kind::kReal);
+extern const Type _null = Type(TypeKind::kNull);
+extern const Type _int = Type(TypeKind::kInt);
+extern const Type _real = Type(TypeKind::kReal);
 
 Type Type::getArithType(const Type &left, const Type &right) {
   return arithmeticResultType[left.kind_][right.kind_];

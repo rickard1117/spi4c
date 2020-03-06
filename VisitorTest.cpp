@@ -7,7 +7,7 @@
 
 using namespace SI;
 
-static int parseArithmeticExpr(const std::string &formula) {
+static GeneralArithVal parseArithmeticExpr(const std::string &formula) {
   Parser p{formula};
   auto ast = p.expr();
   Interpreter visitor;
@@ -58,7 +58,8 @@ TEST(TestParser, SimpleUnary) { ASSERT_EQ(parseArithmeticExpr("-3"), -3); }
 //   ASSERT_EQ(table["abc"], 3);
 // }
 
-std::map<std::string, int> ParserProgram(const std::string &s) {
+static const std::map<std::string, GeneralArithVal> ParserProgram(
+    const std::string &s) {
   Parser p{s};
   auto ast = p.program();
   Interpreter visitor;
@@ -107,6 +108,26 @@ TEST(TestParser, UndefineVar) {
     END.
   )";
   EXPECT_ANY_THROW(CheckSymbolTable(s));
+}
+
+TEST(TestParser, TestRealArith) {
+  const std::string s = R"(
+    PROGRAM part2;
+    VAR
+      a     : INTEGER;
+      b,c   : REAL;
+    BEGIN
+      a := 3;
+      b := 3 + 4.2;
+      c := 1 + b * a / 2 + 1;
+    END.
+  )";
+
+  auto table = ParserProgram(s);
+
+  ASSERT_EQ(table["a"], 3);
+  ASSERT_EQ(table["b"], 7.2);
+  ASSERT_EQ(table["c"], 12.8);
 }
 
 // TEST(TestParser, IntegerDiv) {

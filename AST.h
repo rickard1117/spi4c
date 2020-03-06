@@ -43,7 +43,7 @@ class Number : public Noncopyable {
   friend class SymbolTableBuilder;
   Type evalType_;
   Type promoteType_;
-  std::variant<int, float> num_;
+  std::variant<int, double> num_;
 };
 
 class Program : public Noncopyable {
@@ -128,17 +128,19 @@ class Var : public Noncopyable {
   const std::string id_;
 };
 
-enum class DeclarationType { kInt, kReal };
+enum class DeclarationType { kNull, kInt, kReal };
 class Declaration : public Noncopyable {
  public:
-  Declaration(const std::string &var, DeclarationType type)
+  Declaration(const std::string &var,
+              DeclarationType type = DeclarationType::kNull)
       : var_(var), type_(type) {}
+  void setType(DeclarationType type) { type_ = type; }
 
  private:
   friend class Interpreter;
   friend class SymbolTableBuilder;
   const std::string var_;
-  const DeclarationType type_;
+  DeclarationType type_;
 };
 
 enum class ASTNodeType { AST_TYPE(MAKE_ENUM, COMMA) };

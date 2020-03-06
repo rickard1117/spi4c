@@ -39,3 +39,6 @@ target_link_libraries(LexerTest libgtest.a pthread)
 
 add_executable(VisitorTest ${SRC_FILES} VisitorTest.cpp)
 target_link_libraries(VisitorTest libgtest.a pthread)
+
+add_executable(TypeTest ${SRC_FILES} TypeTest.cpp)
+target_link_libraries(TypeTest libgtest.a pthread)
