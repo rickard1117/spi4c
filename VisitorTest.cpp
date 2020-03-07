@@ -130,6 +130,24 @@ TEST(TestParser, TestRealArith) {
   ASSERT_EQ(table["c"], 12.8);
 }
 
+TEST(Lexer, TestComment) {
+  const std::string s = R"(
+    PROGRAM part2;
+    VAR
+      number     : INTEGER; { a number decl}
+      real       : REAL;
+    BEGIN
+      {this is a comment}
+      number := 5 DIV 2;
+      real := 5 / 2;
+    END.
+  )";
+  auto table = ParserProgram(s);
+
+  ASSERT_EQ(table["number"], 2);
+  ASSERT_EQ(table["real"], 2.5);
+}
+
 TEST(TestParser, IntegerAndRealDiv) {
   const std::string s = R"(
     PROGRAM part2;

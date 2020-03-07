@@ -93,6 +93,13 @@ std::unique_ptr<Token> Lexer::read_ident(char c) {
   return tok;
 }
 
+void Lexer::skip_comment(char c) {
+  while (c != '}') {
+    c = readc();
+  };
+  // back();
+}
+
 std::unique_ptr<Token> Lexer::getNextToken() {
   skipSpaces();
   auto c = readc();
@@ -122,6 +129,10 @@ std::unique_ptr<Token> Lexer::getNextToken() {
       return make_keyword(TokenId::kSemi);
     case ',':
       return make_keyword(TokenId::kComma);
+    case '{': {
+      skip_comment(c);
+      return getNextToken();
+    }
     case 'a' ... 'z':
     case 'A' ... 'Z':
       return read_ident(c);

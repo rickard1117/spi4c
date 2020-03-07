@@ -173,6 +173,7 @@ TEST(Lexer, TestSemiToken) {
   EXPECT_EQ(t->id(), TokenId::kSemi);
 }
 
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
