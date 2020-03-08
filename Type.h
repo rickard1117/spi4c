@@ -54,6 +54,7 @@ class GeneralArithVal {
   }
 
   int getint() const { return std::get<int>(num_); }
+
   double getreal() const {
     if (type_ == _int) {
       return static_cast<double>(std::get<int>(num_));

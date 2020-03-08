@@ -97,7 +97,6 @@ void Lexer::skip_comment(char c) {
   while (c != '}') {
     c = readc();
   };
-  // back();
 }
 
 std::unique_ptr<Token> Lexer::getNextToken() {

@@ -34,11 +34,13 @@ util.cpp
 Type.h
 Type.cpp)
 
-add_executable(LexerTest ${SRC_FILES} LexerTest.cpp)
-target_link_libraries(LexerTest libgtest.a pthread)
+ADD_LIBRARY(si SHARED ${SRC_FILES})
 
-add_executable(VisitorTest ${SRC_FILES} VisitorTest.cpp)
-target_link_libraries(VisitorTest libgtest.a pthread)
+add_executable(LexerTest LexerTest.cpp)
+target_link_libraries(LexerTest si libgtest.a pthread)
 
-add_executable(TypeTest ${SRC_FILES} TypeTest.cpp)
-target_link_libraries(TypeTest libgtest.a pthread)
+add_executable(InterpreterTest InterpreterTest.cpp)
+target_link_libraries(InterpreterTest si libgtest.a pthread)
+
+add_executable(TypeTest TypeTest.cpp)
+target_link_libraries(TypeTest si libgtest.a pthread)
