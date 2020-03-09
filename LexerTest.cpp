@@ -42,15 +42,14 @@ TEST(Lexer, TestRealNum) {
   ASSERT_EQ(t->val(), "0.456");
 
   t = l.getNextToken();
-  ASSERT_TRUE(t->isKeyword(TokenId::kPlus));
+  ASSERT_EQ(t->type(), TokenType::kPlus);
 
   t = l.getNextToken();
   ASSERT_EQ(t->type(), TokenType::kNumber);
   ASSERT_EQ(t->val(), "2.335");
 
   t = l.getNextToken();
-  ASSERT_EQ(t->type(), TokenType::kKeyword);
-  ASSERT_TRUE(t->isKeyword(TokenId::kMinus));
+  ASSERT_EQ(t->type(), TokenType::kMinus);
 
   t = l.getNextToken();
   ASSERT_EQ(t->type(), TokenType::kNumber);
@@ -65,14 +64,13 @@ TEST(Lexer, TestRealNum) {
 
 //   t = l.getNextToken();
 //   ASSERT_EQ(t->type(), TokenType::kKeyword);
-//   ASSERT_EQ(t->id(), TokenId::kDot);
+//   ASSERT_EQ(t->id(), TokenType::kDot);
 // }
 
 TEST(Lexer, TestSingleOp) {
   Lexer l{"*"};
   auto t = l.getNextToken();
-  ASSERT_EQ(t->type(), TokenType::kKeyword);
-  ASSERT_EQ(t->id(), TokenId::kStar);
+  ASSERT_EQ(t->type(), TokenType::kStar);
 }
 
 // TEST(Lexer, TestBadFormula) {
@@ -88,40 +86,34 @@ TEST(Lexer, TestComplicatedFormula) {
   EXPECT_EQ(t->val(), "3");
 
   t = l.getNextToken();
-  EXPECT_EQ(t->type(), TokenType::kKeyword);
-  EXPECT_EQ(t->id(), TokenId::kStar);
+  EXPECT_EQ(t->type(), TokenType::kStar);
 
   t = l.getNextToken();
-  EXPECT_EQ(t->type(), TokenType::kKeyword);
-  EXPECT_EQ(t->id(), TokenId::kLparent);
+  EXPECT_EQ(t->type(), TokenType::kLparent);
 
   t = l.getNextToken();
   EXPECT_EQ(t->type(), TokenType::kNumber);
   EXPECT_EQ(t->val(), "123");
 
   t = l.getNextToken();
-  EXPECT_EQ(t->type(), TokenType::kKeyword);
-  EXPECT_EQ(t->id(), TokenId::kPlus);
+  EXPECT_EQ(t->type(), TokenType::kPlus);
 
   t = l.getNextToken();
   EXPECT_EQ(t->type(), TokenType::kNumber);
   EXPECT_EQ(t->val(), "456");
 
   t = l.getNextToken();
-  EXPECT_EQ(t->type(), TokenType::kKeyword);
-  EXPECT_EQ(t->id(), TokenId::kRparent);
+  EXPECT_EQ(t->type(), TokenType::kRparent);
 
   t = l.getNextToken();
-  EXPECT_EQ(t->type(), TokenType::kKeyword);
-  EXPECT_EQ(t->id(), TokenId::kSlash);
+  EXPECT_EQ(t->type(), TokenType::kSlash);
 
   t = l.getNextToken();
   EXPECT_EQ(t->type(), TokenType::kNumber);
   EXPECT_EQ(t->val(), "20");
 
   t = l.getNextToken();
-  EXPECT_EQ(t->type(), TokenType::kKeyword);
-  EXPECT_EQ(t->id(), TokenId::kPlus);
+  EXPECT_EQ(t->type(), TokenType::kPlus);
 
   t = l.getNextToken();
   EXPECT_EQ(t->type(), TokenType::kNumber);
@@ -134,32 +126,28 @@ TEST(Lexer, TestComplicatedFormula) {
 TEST(Lexer, TestDotToken) {
   Lexer l{"."};
   auto t = l.getNextToken();
-  EXPECT_EQ(t->type(), TokenType::kKeyword);
-  EXPECT_EQ(t->id(), TokenId::kDot);
+  EXPECT_EQ(t->type(), TokenType::kDot);
 }
 
 TEST(Lexer, TestAssignToken) {
   Lexer l{"::="};
 
   auto t = l.getNextToken();
-  EXPECT_EQ(t->type(), TokenType::kKeyword);
-  EXPECT_EQ(t->id(), TokenId::kColon);
+  EXPECT_EQ(t->type(), TokenType::kColon);
 
   t = l.getNextToken();
-  EXPECT_EQ(t->type(), TokenType::kKeyword);
-  EXPECT_EQ(t->id(), TokenId::kAssign);
+  EXPECT_EQ(t->type(), TokenType::kAssign);
 }
 
 TEST(Lexer, TestVarToken) {
   Lexer l{"aAbBcC := 3"};
 
   auto t = l.getNextToken();
-  EXPECT_EQ(t->type(), TokenType::kId);
+  EXPECT_EQ(t->type(), TokenType::kVar);
   EXPECT_EQ(t->val(), "aAbBcC");
 
   t = l.getNextToken();
-  EXPECT_EQ(t->type(), TokenType::kKeyword);
-  EXPECT_EQ(t->id(), TokenId::kAssign);
+  EXPECT_EQ(t->type(), TokenType::kAssign);
 
   t = l.getNextToken();
   EXPECT_EQ(t->type(), TokenType::kNumber);
@@ -169,16 +157,15 @@ TEST(Lexer, TestVarToken) {
 TEST(Lexer, TestSemiToken) {
   Lexer l{";"};
   auto t = l.getNextToken();
-  EXPECT_EQ(t->type(), TokenType::kKeyword);
-  EXPECT_EQ(t->id(), TokenId::kSemi);
+  EXPECT_EQ(t->type(), TokenType::kSemi);
 }
 
 TEST(Token, Testidtoval) {
-  Token t{TokenType::kId, TokenId::kVar, "abc123"};
+  Token t{TokenType::kVar, "abc123"};
   EXPECT_EQ(t.isVar(), true);
   EXPECT_EQ(t.val(), "abc123");
 
-  Token t2{TokenType::kKeyword, TokenId::kBegin};
+  Token t2{TokenType::kBegin};
   EXPECT_EQ(t2.val(), "BEGIN");
 }
 

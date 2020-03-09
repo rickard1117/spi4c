@@ -26,8 +26,8 @@ class Lexer {
  private:
   std::unique_ptr<Token> read_number(char c);
   std::unique_ptr<Token> read_ident(char c);
-  std::unique_ptr<Token> read_rep(char expect, TokenId id, TokenId els);
-  std::unique_ptr<Token> make_keyword(TokenId id);
+  std::unique_ptr<Token> read_rep(char expect, TokenType type, TokenType els);
+  std::unique_ptr<Token> make_keyword(TokenType type);
   void skip_comment(char c);
   void skipSpaces();
   char readc();

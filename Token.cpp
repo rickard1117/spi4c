@@ -5,18 +5,18 @@
 #include "util.h"
 
 namespace {
-using SI::TokenId;
+using SI::TokenType;
 
-std::unordered_map<std::string, TokenId> val2id;
-std::unordered_map<TokenId, std::string> id2val;
-void mapinsert(TokenId id, const std::string &val) {
-  val2id[val] = id;
-  id2val[id] = val;
+std::unordered_map<std::string, TokenType> val2id;
+std::unordered_map<TokenType, std::string> id2val;
+void mapinsert(TokenType type, const std::string &val) {
+  val2id[val] = type;
+  id2val[type] = val;
 }
 
 int init() {
-#define op(name, str) mapinsert(TokenId::name, str);
-#define keyword(name, str) mapinsert(TokenId::name, str);
+#define op(name, str) mapinsert(TokenType::name, str);
+#define keyword(name, str) mapinsert(TokenType::name, str);
 #include "keyword.inc"
 #undef keyword
 #undef op
@@ -25,14 +25,21 @@ int init() {
 
 auto __ = init();
 
+std::string idtoval(TokenType type) {
+  auto it = id2val.find(type);
+  if (it == id2val.cend()) {
+    return "";
+  }
+  return it->second;
+}
+
 }  // namespace
 
 namespace SI {
 
 using namespace SI::util;
 
-Token::Token(TokenType type, TokenId id, const std::string &val)
-    : type_(type), id_(id), val_(val) {
+Token::Token(TokenType type, const std::string &val) : type_(type), val_(val) {
   SI_ASSERT(val != "");
 }
 
@@ -40,23 +47,21 @@ const std::string Token::val() const {
   if (isVar() || isNumber()) {
     return val_.value();
   }
-  return Token::idtoval(id_);
+  return idtoval(type_);
 }
 
-TokenId Token::valtoid(const std::string &id) {
-  auto it = val2id.find(id);
+TokenType Token::valToType(const std::string &val) {
+  auto it = val2id.find(val);
   if (it == val2id.cend()) {
-    return TokenId::kNull;
+    return TokenType::kNull;
   }
   return it->second;
 }
 
-std::string Token::idtoval(TokenId id) {
-  auto it = id2val.find(id);
-  if (it == id2val.cend()) {
-    return "";
-  }
-  return it->second;
-}
+// bool Token::isKeyword(TokenType type) const {
+//   auto index = static_cast<std::size_t>(type);
+//   return index >= static_cast<std::size_t>(TokenType::kBegin) &&
+//          index <= static_cast<std::size_t>(TokenType::kEnd);
+// }
 
 }  // namespace SI

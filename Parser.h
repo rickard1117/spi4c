@@ -46,7 +46,7 @@ class Parser {
   static Ptr<ASTNode> astProgram(Ptr<ASTNode> block);
   static Ptr<ASTNode> astEmpty();
 
-  void eatKeyword(TokenId expect);
+  void eatKeyword(TokenType expect);
   std::string eatVar();
 
   Lexer lexer_;

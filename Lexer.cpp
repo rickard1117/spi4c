@@ -53,15 +53,15 @@ std::unique_ptr<Token> Lexer::read_number(char c) {
     back();
   }
 
-  return std::make_unique<Token>(TokenType::kNumber, TokenId::kNull,
-                                 std::move(val));
+  return std::make_unique<Token>(TokenType::kNumber, std::move(val));
 }
 
-std::unique_ptr<Token> Lexer::make_keyword(TokenId id) {
-  return std::make_unique<Token>(TokenType::kKeyword, id);
+std::unique_ptr<Token> Lexer::make_keyword(TokenType id) {
+  return std::make_unique<Token>(id);
 }
 
-std::unique_ptr<Token> Lexer::read_rep(char expect, TokenId id, TokenId els) {
+std::unique_ptr<Token> Lexer::read_rep(char expect, TokenType id,
+                                       TokenType els) {
   return make_keyword(next(expect) ? id : els);
 }
 
@@ -81,13 +81,12 @@ std::unique_ptr<Token> Lexer::read_ident(char c) {
   }
   back();
 
-  auto tokid = Token::valtoid(val);
+  auto tokid = Token::valToType(val);
   std::unique_ptr<Token> tok;
-  if (tokid != TokenId::kNull) {
-    tok = std::make_unique<Token>(TokenType::kKeyword, tokid, std::move(val));
+  if (tokid != TokenType::kNull) {
+    tok = std::make_unique<Token>(tokid);
   } else {
-    tok =
-        std::make_unique<Token>(TokenType::kId, TokenId::kVar, std::move(val));
+    tok = std::make_unique<Token>(TokenType::kVar, std::move(val));
   }
 
   return tok;
@@ -105,29 +104,29 @@ std::unique_ptr<Token> Lexer::getNextToken() {
 
   switch (c) {
     case '\0':
-      return std::make_unique<Token>(TokenType::kEof, TokenId::kNull);
+      return std::make_unique<Token>(TokenType::kEof);
     case '0' ... '9':
       return read_number(c);
     case ':':
-      return read_rep('=', TokenId::kAssign, TokenId::kColon);
+      return read_rep('=', TokenType::kAssign, TokenType::kColon);
     case '+':
-      return read_rep('+', TokenId::kInc, TokenId::kPlus);
+      return read_rep('+', TokenType::kInc, TokenType::kPlus);
     case '-':
-      return read_rep('+', TokenId::kDec, TokenId::kMinus);
+      return read_rep('+', TokenType::kDec, TokenType::kMinus);
     case '*':
-      return make_keyword(TokenId::kStar);
+      return make_keyword(TokenType::kStar);
     case '/':
-      return make_keyword(TokenId::kSlash);
+      return make_keyword(TokenType::kSlash);
     case '(':
-      return make_keyword(TokenId::kLparent);
+      return make_keyword(TokenType::kLparent);
     case ')':
-      return make_keyword(TokenId::kRparent);
+      return make_keyword(TokenType::kRparent);
     case '.':
-      return make_keyword(TokenId::kDot);
+      return make_keyword(TokenType::kDot);
     case ';':
-      return make_keyword(TokenId::kSemi);
+      return make_keyword(TokenType::kSemi);
     case ',':
-      return make_keyword(TokenId::kComma);
+      return make_keyword(TokenType::kComma);
     case '{': {
       skip_comment(c);
       return getNextToken();
