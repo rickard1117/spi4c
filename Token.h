@@ -31,9 +31,10 @@ class Token : public SI::util::Noncopyable {
   Token(TokenType type, TokenId id) : type_(type), id_(id) {}
   Token(TokenType type, TokenId id, const std::string &val);
 
-  static TokenId keyword2id(const std::string &id);
+  static TokenId valtoid(const std::string &val);
+  static std::string idtoval(TokenId id);
 
-  const std::string &val() const;
+  const std::string val() const;
 
   TokenType type() const { return type_; }
   TokenId id() const { return id_; }
@@ -41,6 +42,7 @@ class Token : public SI::util::Noncopyable {
     return type_ == TokenType::kKeyword && id_ == id;
   }
   bool isVar() const { return type_ == TokenType::kId && id_ == TokenId::kVar; }
+  bool isNumber() const { return type_ == TokenType::kNumber; }
 
  private:
   TokenType type_;

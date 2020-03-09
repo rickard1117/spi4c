@@ -81,7 +81,7 @@ std::unique_ptr<Token> Lexer::read_ident(char c) {
   }
   back();
 
-  auto tokid = Token::keyword2id(val);
+  auto tokid = Token::valtoid(val);
   std::unique_ptr<Token> tok;
   if (tokid != TokenId::kNull) {
     tok = std::make_unique<Token>(TokenType::kKeyword, tokid, std::move(val));

@@ -173,6 +173,14 @@ TEST(Lexer, TestSemiToken) {
   EXPECT_EQ(t->id(), TokenId::kSemi);
 }
 
+TEST(Token, Testidtoval) {
+  Token t{TokenType::kId, TokenId::kVar, "abc123"};
+  EXPECT_EQ(t.isVar(), true);
+  EXPECT_EQ(t.val(), "abc123");
+
+  Token t2{TokenType::kKeyword, TokenId::kBegin};
+  EXPECT_EQ(t2.val(), "BEGIN");
+}
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
