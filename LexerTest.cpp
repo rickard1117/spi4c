@@ -28,12 +28,12 @@ TEST(Lexer, TestMultiCharInteger) {
   ASSERT_EQ(t->val(), "223");
 }
 
-// TEST(Lexer, TestReal) {
-//   Lexer l{"223.223"};
-//   auto t = l.getNextToken();
-//   ASSERT_EQ(t->type(), TokenType::kNumber);
-//   ASSERT_EQ(t->val(), "223.223");
-// }
+TEST(Lexer, TestReal) {
+  Lexer l{"223.223"};
+  auto t = l.getNextToken();
+  ASSERT_EQ(t->type(), TokenType::kNumber);
+  ASSERT_EQ(t->val(), "223.223");
+}
 
 TEST(Lexer, TestRealNum) {
   Lexer l{"0.456 + 2.335 - 1.012"};
@@ -161,11 +161,11 @@ TEST(Lexer, TestSemiToken) {
 }
 
 TEST(Token, Testidtoval) {
-  Token t{TokenType::kVar, "abc123"};
+  Token t{TokenType::kVar, 0, 0, "abc123"};
   EXPECT_EQ(t.isVar(), true);
   EXPECT_EQ(t.val(), "abc123");
 
-  Token t2{TokenType::kBegin};
+  Token t2{TokenType::kBegin, 0, 0, "abc123"};
   EXPECT_EQ(t2.val(), "BEGIN");
 }
 

@@ -39,7 +39,8 @@ namespace SI {
 
 using namespace SI::util;
 
-Token::Token(TokenType type, const std::string &val) : type_(type), val_(val) {
+Token::Token(TokenType type, int lineno, int colno, const std::string &val)
+    : type_(type), val_(val), lineno_(lineno), colno_(colno) {
   SI_ASSERT(val != "");
 }
 

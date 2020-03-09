@@ -19,6 +19,16 @@ void Lexer::skipSpaces() {
   }
 }
 
+void Lexer::advance() {
+  if (current() == '\n') {
+    currentLine_++;
+    currentCol_ = 1;
+  } else {
+    currentCol_++;
+  }
+  idx_++;
+}
+
 void Lexer::back(int step) {
   idx_ -= step;
   SI_ASSERT(idx_ >= 0);
@@ -53,11 +63,12 @@ std::unique_ptr<Token> Lexer::read_number(char c) {
     back();
   }
 
-  return std::make_unique<Token>(TokenType::kNumber, std::move(val));
+  return std::make_unique<Token>(TokenType::kNumber, currentLine_, currentCol_,
+                                 std::move(val));
 }
 
 std::unique_ptr<Token> Lexer::make_keyword(TokenType id) {
-  return std::make_unique<Token>(id);
+  return std::make_unique<Token>(id, currentLine_, currentCol_);
 }
 
 std::unique_ptr<Token> Lexer::read_rep(char expect, TokenType id,
@@ -84,9 +95,10 @@ std::unique_ptr<Token> Lexer::read_ident(char c) {
   auto tokid = Token::valToType(val);
   std::unique_ptr<Token> tok;
   if (tokid != TokenType::kNull) {
-    tok = std::make_unique<Token>(tokid);
+    tok = std::make_unique<Token>(tokid, currentLine_, currentCol_);
   } else {
-    tok = std::make_unique<Token>(TokenType::kVar, std::move(val));
+    tok = std::make_unique<Token>(TokenType::kVar, currentLine_, currentCol_,
+                                  std::move(val));
   }
 
   return tok;
@@ -104,7 +116,8 @@ std::unique_ptr<Token> Lexer::getNextToken() {
 
   switch (c) {
     case '\0':
-      return std::make_unique<Token>(TokenType::kEof);
+      return std::make_unique<Token>(TokenType::kEof, currentLine_,
+                                     currentCol_);
     case '0' ... '9':
       return read_number(c);
     case ':':

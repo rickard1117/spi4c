@@ -12,13 +12,16 @@ class Lexer {
  public:
   Lexer() : idx_(0) {}
 
-  Lexer(const std::string &text) : text_(text), idx_(0) {}
+  Lexer(const std::string &text)
+      : text_(text), idx_(0), currentLine_(1), currentCol_(1) {}
 
   std::unique_ptr<Token> getNextToken();
 
   void init(const std::string &text) {
     text_ = text;
     idx_ = 0;
+    currentLine_ = 1;
+    currentCol_ = 1;
   }
 
   std::string remaning() const { return text_.substr(idx_); }
@@ -33,11 +36,13 @@ class Lexer {
   char readc();
   char current() const;
   bool next(char expect);
-  void advance(int step = 1) { idx_ += step; }
+  void advance();
   void back(int step = 1);
 
   std::string text_;
   std::size_t idx_;
+  std::size_t currentLine_;
+  std::size_t currentCol_;
 };
 
 }  // namespace SI

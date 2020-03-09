@@ -21,35 +21,25 @@ enum class TokenType {
   kEof,
 };
 
-// enum class TokenId {
-//   kNull,
-//   kVar,
-// #define op(name, _) name,
-// #define keyword(name, _) name,
-// #include "keyword.inc"
-// #undef keyword
-// #undef op
-// };
-
 class Token : public SI::util::Noncopyable {
  public:
-  Token(TokenType type) : type_(type) {}
-  Token(TokenType type, const std::string &val);
+  Token(TokenType type, int lineno, int colno)
+      : type_(type), lineno_(lineno), colno_(colno) {}
+  Token(TokenType type, int lineno, int colno, const std::string &val = "");
 
   static TokenType valToType(const std::string &val);
-  // static std::string idtoval(TokenId id);
 
   const std::string val() const;
 
   TokenType type() const { return type_; }
-  // TokenId id() const { return id_; }
-  // bool isKeyword(TokenType type) const;
   bool isVar() const { return type_ == TokenType::kVar; }
   bool isNumber() const { return type_ == TokenType::kNumber; }
 
  private:
   TokenType type_;
   std::optional<std::string> val_;
+  int lineno_;
+  int colno_;
 };
 
 }  // namespace SI
