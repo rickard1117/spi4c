@@ -39,10 +39,14 @@ void SymbolTableBuilder::visitBlock(const Block &block) {
 }
 
 void SymbolTableBuilder::visitDecl(const Declaration &decl) {
+  if (decl.type_ == DeclarationType::kProcedure) {
+    return;
+  }
   auto kind = TypeKind::kNull;
   if (decl.type_ == DeclarationType::kInt) {
     kind = TypeKind::kInt;
   } else {
+    SI_ASSERT(decl.type_ == DeclarationType::kReal);
     kind = TypeKind::kReal;
   }
   if (!table_->define(decl.var_, kind)) {

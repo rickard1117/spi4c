@@ -69,7 +69,7 @@ TokenType Token::valToType(const std::string &val) {
 const std::string Token::toString() const {
   return "[type : " + std::to_string(static_cast<std::size_t>(type_)) +
          " line : " + std::to_string(lineno_) +
-         " col : " + std::to_string(colno_) + "]";
+         " col : " + std::to_string(colno_) + " val : " + val() + "]";
 }
 
 }  // namespace SI

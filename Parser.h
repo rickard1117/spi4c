@@ -43,9 +43,13 @@ class Parser {
   static Ptr<ASTNode> astCompound(std::vector<Ptr<ASTNode>> stmtlist);
   static Ptr<ASTNode> astBlock(std::vector<Ptr<ASTNode>> decls,
                                Ptr<ASTNode> compound);
-  static Ptr<ASTNode> astDeclaration(const std::string &val);
+  static Ptr<ASTNode> astDeclaration(
+      const std::string &val, DeclarationType type = DeclarationType::kNull,
+      Ptr<ASTNode> proceDecl = nullptr);
   static Ptr<ASTNode> astProgram(Ptr<ASTNode> block);
   static Ptr<ASTNode> astEmpty();
+  static Ptr<ASTNode> astProcedureDecl(const std::string &name,
+                                       Ptr<ASTNode> block);
 
   void eatKeyword(TokenType expect);
   std::string eatVar();

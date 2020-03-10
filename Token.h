@@ -12,7 +12,6 @@ enum class TokenType {
   kNull = 0,
   kVar,
   kNumber,
-// kString,
 #define op(name, _) name,
 #define keyword(name, _) name,
 #include "keyword.inc"

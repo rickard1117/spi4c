@@ -35,9 +35,12 @@ Ptr<ASTNode> Parser::astBlock(std::vector<Ptr<ASTNode>> decls,
                                    std::move(decls), std::move(compound));
 }
 
-Ptr<ASTNode> Parser::astDeclaration(const std::string &val) {
+Ptr<ASTNode> Parser::astDeclaration(const std::string &val,
+                                    DeclarationType type,
+                                    Ptr<ASTNode> proceDecl) {
   return std::make_unique<ASTNode>(ASTNodeType::kDeclaration,
-                                   IN_PLACE_TYPE(Declaration), val);
+                                   IN_PLACE_TYPE(Declaration), val, type,
+                                   std::move(proceDecl));
 }
 
 Ptr<ASTNode> Parser::astProgram(Ptr<ASTNode> block) {
@@ -62,6 +65,13 @@ Ptr<ASTNode> Parser::astCompound(std::vector<Ptr<ASTNode>> stmtlist) {
 
 Ptr<ASTNode> Parser::astEmpty() {
   return std::make_unique<ASTNode>(ASTNodeType::kEmpty, IN_PLACE_TYPE(Empty));
+}
+
+Ptr<ASTNode> Parser::astProcedureDecl(const std::string &name,
+                                      Ptr<ASTNode> block) {
+  return std::make_unique<ASTNode>(ASTNodeType::kProcedureDecl,
+                                   IN_PLACE_TYPE(ProcedureDecl), name,
+                                   std::move(block));
 }
 
 Ptr<ASTNode> Parser::readNumber(const Token &tok) const {
@@ -233,25 +243,73 @@ DeclarationType Parser::typeSpec() {
   return DeclarationType::kNull;
 }
 
-// declarations : VAR (variable_declaration SEMI)+ | empty
+//   declarations : VAR (variable_declaration SEMI)+ (procedure_declaration)*
+//                    | (PROCEDURE ID SEMI block SEMI)*
+//                    | empty
 std::vector<Ptr<ASTNode>> Parser::declarations() {
   std::vector<Ptr<ASTNode>> decls;
+
   auto tok = peekToken();
-  if (!(tok->type() == TokenType::kVardecl)) {
+  if (tok->type() == TokenType::kVardecl) {
+    eatKeyword(TokenType::kVardecl);
+    do {
+      auto decl = variableDeclaration();
+      decls.insert(std::end(decls), std::make_move_iterator(decl.begin()),
+                   std::make_move_iterator(decl.end()));
+      eatKeyword(TokenType::kSemi);
+      tok = peekToken();
+    } while (tok->isVar());
+  }
+
+  if (tok->type() == TokenType::kProcedure) {
+    do {
+      eatKeyword(TokenType::kProcedure);
+      auto name = eatVar();
+      eatKeyword(TokenType::kSemi);
+      decls.push_back(astDeclaration(name, DeclarationType::kProcedure,
+                                     astProcedureDecl(name, block())));
+      eatKeyword(TokenType::kSemi);
+      tok = peekToken();
+    } while (tok->type() == TokenType::kProcedure);
     return decls;
   }
-  eatKeyword(TokenType::kVardecl);
-
-  std::vector<Ptr<ASTNode>> decl;
-  do {
-    decl = variableDeclaration();
-    decls.insert(std::end(decls), std::make_move_iterator(decl.begin()),
-                 std::make_move_iterator(decl.end()));
-    eatKeyword(TokenType::kSemi);
-    tok = peekToken();
-  } while (tok->isVar());
 
   return decls;
+
+  // for (;; tok = peekToken()) {
+  //   if (tok->type() == TokenType::kVardecl) {
+  //     eatKeyword(TokenType::kVardecl);
+  //     auto decl = variableDeclaration();
+  //     decls.insert(std::end(decls), std::make_move_iterator(decl.begin()),
+  //                  std::make_move_iterator(decl.end()));
+  //     eatKeyword(TokenType::kSemi);
+  //   } else if (tok->type() == TokenType::kProcedure) {
+  //     eatKeyword(TokenType::kProcedure);
+  //     auto name = eatVar();
+  //     eatKeyword(TokenType::kSemi);
+  //     decls.push_back(astProcedureDecl(name, block()));
+  //     eatKeyword(TokenType::kSemi);
+  //   } else {
+  //     return decls;
+  //   }
+  // }
+
+  // auto tok = peekToken();
+  // if (!(tok->type() == TokenType::kVardecl)) {
+  //   return decls;
+  // }
+  // eatKeyword(TokenType::kVardecl);
+
+  // std::vector<Ptr<ASTNode>> decl;
+  // do {
+  //   decl = variableDeclaration();
+  //   decls.insert(std::end(decls), std::make_move_iterator(decl.begin()),
+  //                std::make_move_iterator(decl.end()));
+  //   eatKeyword(TokenType::kSemi);
+  //   tok = peekToken();
+  // } while (tok->isVar());
+
+  // return decls;
 }
 
 // block : declarations compound_statement

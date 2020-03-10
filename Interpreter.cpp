@@ -39,6 +39,9 @@ void Interpreter::visitBlock(const Block &block) {
 }
 
 void Interpreter::visitDecl(const Declaration &decl) {
+  if (decl.type_ == DeclarationType::kProcedure) {
+    return;
+  }
   symbolTable_[decl.var_] = 0;
 }
 
