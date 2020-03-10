@@ -60,6 +60,7 @@ GeneralArithVal Interpreter::visitBinOp(const BinaryOp &op) {
     default:
       SI_ASSERT(0);
   }
+  return 0;
 }
 
 GeneralArithVal Interpreter::visitUnaryOp(const UnaryOp &op) {
@@ -71,6 +72,7 @@ GeneralArithVal Interpreter::visitUnaryOp(const UnaryOp &op) {
     default:
       SI_ASSERT(0);
   }
+  return 0;
 }
 
 GeneralArithVal Interpreter::visitNumber(const Number &num) {
@@ -85,9 +87,9 @@ GeneralArithVal Interpreter::visitNumber(const Number &num) {
 
 GeneralArithVal Interpreter::visitVar(const Var &var) {
   auto itr = symbolTable_.find(var.id_);
-  if (itr == symbolTable_.cend()) {
-    SI_ASSERT_MSG(0, "var not defined ! : " + var.id_);
-  }
+
+  SI_ASSERT_MSG(itr != symbolTable_.cend(), "var not defined ! : " + var.id_);
+
   return symbolTable_[var.id_];
 }
 
@@ -106,6 +108,7 @@ GeneralArithVal Interpreter::visitArithExpr(const ASTNode &ast) {
                     "visitArithExpr type not match!!! " +
                         std::to_string(static_cast<std::size_t>(ast.type())));
   }
+  return 0;
 }
 
 void Interpreter::visitAssignment(const Assignment &ast) {

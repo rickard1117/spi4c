@@ -2,6 +2,7 @@
 #define SYMBOL_TABLE_BUILDER_H__
 
 #include "ASTVisitorBase.h"
+#include "SymbolTable.h"
 
 namespace SI {
 

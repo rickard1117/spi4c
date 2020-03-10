@@ -28,6 +28,7 @@ class Parser {
   DeclarationType typeSpec();
 
  private:
+  void unexpectedError(const Token &tok, const std::string &expect) const;
   std::unique_ptr<Token> readToken();
   const Token *peekToken();
   void eatToken();

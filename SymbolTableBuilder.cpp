@@ -1,7 +1,7 @@
 #include "SymbolTableBuilder.h"
 
 #include "AST.h"
-#include "SymbolTable.h"
+#include "Error.h"
 #include "util.h"
 
 namespace SI {
@@ -45,7 +45,9 @@ void SymbolTableBuilder::visitDecl(const Declaration &decl) {
   } else {
     kind = TypeKind::kReal;
   }
-  table_->define(decl.var_, kind);
+  if (!table_->define(decl.var_, kind)) {
+    throw InterpreterError(kErrorDupID, decl.var_);
+  }
 }
 
 GeneralArithVal SymbolTableBuilder::visitBinOp(const BinaryOp &op) {
@@ -59,12 +61,14 @@ GeneralArithVal SymbolTableBuilder::visitUnaryOp(const UnaryOp &op) {
   return GeneralArithVal();
 }
 
-GeneralArithVal SymbolTableBuilder::visitNumber(const Number &num) { return GeneralArithVal(); }
+GeneralArithVal SymbolTableBuilder::visitNumber(const Number &num) {
+  return GeneralArithVal();
+}
 
 GeneralArithVal SymbolTableBuilder::visitVar(const Var &var) {
-  const auto &name = var.id_;
+  const std::string &name = var.id_;
   if (table_->lookup(name) == nullptr) {
-    throw "cannot find symbol : " + name;
+    throw InterpreterError(kErrorIDNotFound, name);
   }
   return GeneralArithVal();
 }

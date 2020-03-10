@@ -23,14 +23,15 @@ enum class TokenType {
 
 class Token : public SI::util::Noncopyable {
  public:
-  Token(TokenType type, int lineno, int colno)
+  Token(TokenType type, std::size_t lineno, std::size_t colno)
       : type_(type), lineno_(lineno), colno_(colno) {}
-  Token(TokenType type, int lineno, int colno, const std::string &val = "");
+  Token(TokenType type, std::size_t lineno, std::size_t colno,
+        const std::string &val);
 
   static TokenType valToType(const std::string &val);
 
   const std::string val() const;
-
+  const std::string toString() const;
   TokenType type() const { return type_; }
   bool isVar() const { return type_ == TokenType::kVar; }
   bool isNumber() const { return type_ == TokenType::kNumber; }
@@ -38,8 +39,8 @@ class Token : public SI::util::Noncopyable {
  private:
   TokenType type_;
   std::optional<std::string> val_;
-  int lineno_;
-  int colno_;
+  std::size_t lineno_;
+  std::size_t colno_;
 };
 
 }  // namespace SI

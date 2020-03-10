@@ -1,5 +1,6 @@
 #include "Lexer.h"
 
+#include "Error.h"
 #include "Token.h"
 #include "util.h"
 
@@ -148,7 +149,7 @@ std::unique_ptr<Token> Lexer::getNextToken() {
     case 'A' ... 'Z':
       return read_ident(c);
     default:
-      SI_ASSERT_MSG(0, "bad token" + std::to_string(c));
+      throw InterpreterError(kErrorUnrecognized, c);
   }
   SI_ASSERT(0);
 }

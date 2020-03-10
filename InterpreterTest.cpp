@@ -91,25 +91,6 @@ TEST(TestParser, UseDefinedVar) {
   ASSERT_EQ(table["b"], 3);
 }
 
-void CheckSymbolTable(const std::string &s) {
-  Parser p{s};
-  auto ast = p.program();
-  SymbolTableBuilder visitor{std::make_shared<SymbolTable>()};
-  visitor.visitProgram(ast->fetch<Program>());
-}
-
-TEST(TestParser, UndefineVar) {
-  const std::string s = R"(
-    PROGRAM part1;
-    VAR
-      A1 : INTEGER;
-    BEGIN 
-      A2 := 3;
-    END.
-  )";
-  EXPECT_ANY_THROW(CheckSymbolTable(s));
-}
-
 TEST(TestParser, TestRealArith) {
   const std::string s = R"(
     PROGRAM part2;

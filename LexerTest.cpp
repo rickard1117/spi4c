@@ -73,11 +73,6 @@ TEST(Lexer, TestSingleOp) {
   ASSERT_EQ(t->type(), TokenType::kStar);
 }
 
-// TEST(Lexer, TestBadFormula) {
-//   Lexer l{"$"};
-//   ASSERT_ANY_THROW(l.getNextToken());
-// }
-
 TEST(Lexer, TestComplicatedFormula) {
   Lexer l{"3 * ( 123 + 456) / 20 + 1 "};
 

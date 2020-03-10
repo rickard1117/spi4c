@@ -13,12 +13,11 @@ namespace SI {
 class SymbolTable {
  public:
   const Symbol *lookup(const std::string &name) const;
-  void define(const std::string &name, TypeKind kind);
+  bool define(const std::string &name, TypeKind kind);
 
  private:
   std::unordered_map<std::string, Symbol> table_;
 };
-
 
 }  // namespace SI
 

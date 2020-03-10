@@ -1,6 +1,7 @@
 #include "Parser.h"
 
 #include "AST.h"
+#include "Error.h"
 #include "util.h"
 
 namespace SI {
@@ -64,25 +65,20 @@ Ptr<ASTNode> Parser::astEmpty() {
 }
 
 Ptr<ASTNode> Parser::readNumber(const Token &tok) const {
-  SI_ASSERT(tok.type() == TokenType::kNumber);
   return astNumber(tok.val());
 }
 
 void Parser::eatKeyword(TokenType expect) {
   auto tok = readToken();
   if (tok->type() != expect) {
-    std::cout << "text remaning : \n" << lexer_.remaning() << '\n';
-    SI_ASSERT_MSG(0, "unexpect keyword , expect : " +
-                         std::to_string(static_cast<std::size_t>(expect)) +
-                         ", we but got : " +
-                         std::to_string(static_cast<std::size_t>(tok->type())));
+    unexpectedError(*tok, std::to_string(static_cast<std::size_t>(expect)));
   }
 }
 
 std::string Parser::eatVar() {
   auto tok = readToken();
   if (!tok->isVar()) {
-    SI_ASSERT_MSG(0, "current token's not var : [");
+    unexpectedError(*tok, "variable");
   }
   return tok->val();
 }
@@ -110,9 +106,10 @@ Ptr<ASTNode> Parser::factor() {
     case TokenType::kVar:
       return astVar(tok->val());
     default:
-      SI_ASSERT_MSG(0, "bad token id");
+      unexpectedError(*tok, "factor");
   }
   SI_ASSERT(0);
+  return nullptr;
 }
 
 std::unique_ptr<Token> Parser::readToken() {
@@ -192,9 +189,8 @@ Ptr<ASTNode> Parser::assignmentStatement() {
   auto var = readToken();
 
   if (var->type() != TokenType::kVar) {
-    SI_ASSERT_MSG(0, "bad assignmentStatement");
+    unexpectedError(*var, "variable");
   }
-
   eatKeyword(TokenType::kAssign);
   return astAssignment(astVar(var->val()), expr());
 }
@@ -232,7 +228,9 @@ DeclarationType Parser::typeSpec() {
     return DeclarationType::kReal;
   }
 
-  throw "bad type spec";
+  unexpectedError(*tok, "type_spec");
+  SI_ASSERT(0);
+  return DeclarationType::kNull;
 }
 
 // declarations : VAR (variable_declaration SEMI)+ | empty
@@ -267,7 +265,7 @@ Ptr<ASTNode> Parser::program() {
   eatKeyword(TokenType::kProgram);
   auto tok = readToken();
   if (!tok->isVar()) {
-    SI_ASSERT_MSG(0, "bad program");
+    unexpectedError(*tok, "variable");
   }
 
   // The program name, no use for now
@@ -313,6 +311,13 @@ Ptr<ASTNode> Parser::statement() {
   }
 
   return empty();
+}
+
+void Parser::unexpectedError(const Token &tok,
+                             const std::string &expect) const {
+  throw InterpreterError(
+      kErrorUnexpectedToken,
+      " expect : " + expect + ", but got token : " + tok.toString());
 }
 
 }  // namespace SI

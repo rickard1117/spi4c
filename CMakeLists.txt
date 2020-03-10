@@ -32,7 +32,9 @@ SymbolTableBuilder.cpp
 util.h 
 util.cpp
 Type.h
-Type.cpp)
+Type.cpp
+Error.h
+Error.cpp)
 
 ADD_LIBRARY(si SHARED ${SRC_FILES})
 
@@ -44,3 +46,6 @@ target_link_libraries(InterpreterTest si libgtest.a pthread)
 
 add_executable(TypeTest TypeTest.cpp)
 target_link_libraries(TypeTest si libgtest.a pthread)
+
+add_executable(ErrorTest ErrorTest.cpp)
+target_link_libraries(ErrorTest si libgtest.a pthread)

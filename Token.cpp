@@ -39,7 +39,8 @@ namespace SI {
 
 using namespace SI::util;
 
-Token::Token(TokenType type, int lineno, int colno, const std::string &val)
+Token::Token(TokenType type, std::size_t lineno, std::size_t colno,
+             const std::string &val)
     : type_(type), val_(val), lineno_(lineno), colno_(colno) {
   SI_ASSERT(val != "");
 }
@@ -64,5 +65,11 @@ TokenType Token::valToType(const std::string &val) {
 //   return index >= static_cast<std::size_t>(TokenType::kBegin) &&
 //          index <= static_cast<std::size_t>(TokenType::kEnd);
 // }
+
+const std::string Token::toString() const {
+  return "[type : " + std::to_string(static_cast<std::size_t>(type_)) +
+         " line : " + std::to_string(lineno_) +
+         " col : " + std::to_string(colno_) + "]";
+}
 
 }  // namespace SI

@@ -15,8 +15,8 @@ const Symbol *SymbolTable::lookup(const std::string &name) const {
   }
 }
 
-void SymbolTable::define(const std::string &name, TypeKind kind) {
+bool SymbolTable::define(const std::string &name, TypeKind kind) {
   auto result = table_.emplace(name, Symbol(name, Type(kind)));
-  SI_ASSERT(result.second);
+  return result.second;
 }
 }  // namespace SI
