@@ -243,26 +243,25 @@ DeclarationType Parser::typeSpec() {
   return DeclarationType::kNull;
 }
 
-//   declarations : VAR (variable_declaration SEMI)+ (procedure_declaration)*
-//                    | (PROCEDURE ID SEMI block SEMI)*
-//                    | empty
+// declarations : VAR (variable_declaration SEMI)+
+//                         | (PROCEDURE ID SEMI block SEMI)*
+//                         | empty
 std::vector<Ptr<ASTNode>> Parser::declarations() {
   std::vector<Ptr<ASTNode>> decls;
-
   auto tok = peekToken();
-  if (tok->type() == TokenType::kVardecl) {
-    eatKeyword(TokenType::kVardecl);
-    do {
-      auto decl = variableDeclaration();
-      decls.insert(std::end(decls), std::make_move_iterator(decl.begin()),
-                   std::make_move_iterator(decl.end()));
-      eatKeyword(TokenType::kSemi);
-      tok = peekToken();
-    } while (tok->isVar());
-  }
+  for (;;) {
+    if (tok->type() == TokenType::kVardecl) {
+      eatKeyword(TokenType::kVardecl);
+      do {
+        auto decl = variableDeclaration();
+        decls.insert(std::end(decls), std::make_move_iterator(decl.begin()),
+                     std::make_move_iterator(decl.end()));
+        eatKeyword(TokenType::kSemi);
+        tok = peekToken();
+      } while (tok->isVar());
+    }                                                                                                                                                            
 
-  if (tok->type() == TokenType::kProcedure) {
-    do {
+    if (tok->type() == TokenType::kProcedure) {
       eatKeyword(TokenType::kProcedure);
       auto name = eatVar();
       eatKeyword(TokenType::kSemi);
@@ -270,8 +269,9 @@ std::vector<Ptr<ASTNode>> Parser::declarations() {
                                      astProcedureDecl(name, block())));
       eatKeyword(TokenType::kSemi);
       tok = peekToken();
-    } while (tok->type() == TokenType::kProcedure);
-    return decls;
+    }
+
+    break;
   }
 
   return decls;
