@@ -23,6 +23,8 @@ class Parser {
   Ptr<ASTNode> statement();
   Ptr<ASTNode> empty();
   Ptr<ASTNode> block();
+  std::vector<Ptr<ASTNode>> formalParameters();
+  std::vector<Ptr<ASTNode>> formalParameterList();
   std::vector<Ptr<ASTNode>> declarations();
   std::vector<Ptr<ASTNode>> variableDeclaration();
   DeclarationType typeSpec();
@@ -49,7 +51,10 @@ class Parser {
   static Ptr<ASTNode> astProgram(Ptr<ASTNode> block);
   static Ptr<ASTNode> astEmpty();
   static Ptr<ASTNode> astProcedureDecl(const std::string &name,
+                                       std::vector<Ptr<ASTNode>> params,
                                        Ptr<ASTNode> block);
+  static Ptr<ASTNode> astParam(const std::string &val,
+                               DeclarationType type = DeclarationType::kNull);
 
   void eatKeyword(TokenType expect);
   std::string eatVar();

@@ -68,10 +68,16 @@ Ptr<ASTNode> Parser::astEmpty() {
 }
 
 Ptr<ASTNode> Parser::astProcedureDecl(const std::string &name,
+                                      std::vector<Ptr<ASTNode>> params,
                                       Ptr<ASTNode> block) {
   return std::make_unique<ASTNode>(ASTNodeType::kProcedureDecl,
                                    IN_PLACE_TYPE(ProcedureDecl), name,
-                                   std::move(block));
+                                   std::move(params), std::move(block));
+}
+
+Ptr<ASTNode> Parser::astParam(const std::string &val, DeclarationType type) {
+  return std::make_unique<ASTNode>(ASTNodeType::kParam, IN_PLACE_TYPE(Param),
+                                   val, type);
 }
 
 Ptr<ASTNode> Parser::readNumber(const Token &tok) const {
@@ -243,9 +249,45 @@ DeclarationType Parser::typeSpec() {
   return DeclarationType::kNull;
 }
 
-// declarations : VAR (variable_declaration SEMI)+
-//                         | (PROCEDURE ID SEMI block SEMI)*
-//                         | empty
+// formal_parameters : ID (COMMA ID)* COLON type_spec
+std::vector<Ptr<ASTNode>> Parser::formalParameters() {
+  std::vector<Ptr<ASTNode>> decls;
+  auto val = eatVar();
+  decls.push_back(astParam(val));
+
+  auto tok = peekToken();
+  while (tok->type() == TokenType::kComma) {
+    eatKeyword(TokenType::kComma);
+    decls.push_back(astParam(eatVar()));
+    tok = peekToken();
+  }
+
+  eatKeyword(TokenType::kColon);
+  auto t = typeSpec();
+  for (auto &decl : decls) {
+    decl->fetch<Param>().setType(t);
+  }
+
+  return decls;
+}
+
+// formal_parameter_list : formal_parameters
+//                | formal_parameters SEMI formal_parameter_list
+std::vector<Ptr<ASTNode>> Parser::formalParameterList() {
+  std::vector<Ptr<ASTNode>> paramList;
+  vectorMoveExtends(paramList, formalParameters());
+  auto tok = peekToken();
+  while (tok->type() == TokenType::kSemi) {
+    eatKeyword(TokenType::kSemi);
+    vectorMoveExtends(paramList, formalParameterList());
+    tok = peekToken();
+  }
+  return paramList;
+}
+
+// declarations : (VAR (variable_declaration SEMI)+)*
+//         | (PROCEDURE ID (LPAREN formal_parameter_list RPAREN)? SEMI block
+//         SEMI)* | empty
 std::vector<Ptr<ASTNode>> Parser::declarations() {
   std::vector<Ptr<ASTNode>> decls;
   auto tok = peekToken();
@@ -259,14 +301,22 @@ std::vector<Ptr<ASTNode>> Parser::declarations() {
         eatKeyword(TokenType::kSemi);
         tok = peekToken();
       } while (tok->isVar());
-    }                                                                                                                                                            
+    }
 
     if (tok->type() == TokenType::kProcedure) {
       eatKeyword(TokenType::kProcedure);
       auto name = eatVar();
+      std::vector<Ptr<ASTNode>> params;
+      tok = peekToken();
+      if (tok->type() == TokenType::kLparent) {
+        eatKeyword(TokenType::kLparent);
+        params = formalParameterList();
+        eatKeyword(TokenType::kRparent);
+      }
       eatKeyword(TokenType::kSemi);
-      decls.push_back(astDeclaration(name, DeclarationType::kProcedure,
-                                     astProcedureDecl(name, block())));
+      decls.push_back(
+          astDeclaration(name, DeclarationType::kProcedure,
+                         astProcedureDecl(name, std::move(params), block())));
       eatKeyword(TokenType::kSemi);
       tok = peekToken();
     }
@@ -275,41 +325,6 @@ std::vector<Ptr<ASTNode>> Parser::declarations() {
   }
 
   return decls;
-
-  // for (;; tok = peekToken()) {
-  //   if (tok->type() == TokenType::kVardecl) {
-  //     eatKeyword(TokenType::kVardecl);
-  //     auto decl = variableDeclaration();
-  //     decls.insert(std::end(decls), std::make_move_iterator(decl.begin()),
-  //                  std::make_move_iterator(decl.end()));
-  //     eatKeyword(TokenType::kSemi);
-  //   } else if (tok->type() == TokenType::kProcedure) {
-  //     eatKeyword(TokenType::kProcedure);
-  //     auto name = eatVar();
-  //     eatKeyword(TokenType::kSemi);
-  //     decls.push_back(astProcedureDecl(name, block()));
-  //     eatKeyword(TokenType::kSemi);
-  //   } else {
-  //     return decls;
-  //   }
-  // }
-
-  // auto tok = peekToken();
-  // if (!(tok->type() == TokenType::kVardecl)) {
-  //   return decls;
-  // }
-  // eatKeyword(TokenType::kVardecl);
-
-  // std::vector<Ptr<ASTNode>> decl;
-  // do {
-  //   decl = variableDeclaration();
-  //   decls.insert(std::end(decls), std::make_move_iterator(decl.begin()),
-  //                std::make_move_iterator(decl.end()));
-  //   eatKeyword(TokenType::kSemi);
-  //   tok = peekToken();
-  // } while (tok->isVar());
-
-  // return decls;
 }
 
 // block : declarations compound_statement
@@ -349,7 +364,7 @@ std::vector<Ptr<ASTNode>> Parser::statementList() {
   list.push_back(statement());
   if (peekToken()->type() == TokenType::kSemi) {
     eatKeyword(TokenType::kSemi);
-    SI::util::vectorExtends(list, statementList());
+    vectorMoveExtends(list, statementList());
   }
 
   return list;

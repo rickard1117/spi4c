@@ -39,7 +39,7 @@ void __ASSERT(const char *str, bool expr, const char *file, int line,
               const std::string &msg = "");
 
 template <typename T>
-void vectorExtends(std::vector<T> &v1, std::vector<T> v2) {
+void vectorMoveExtends(std::vector<T> &v1, std::vector<T> v2) {
   v1.insert(std::end(v1), std::make_move_iterator(v2.begin()),
             std::make_move_iterator(v2.end()));
 }

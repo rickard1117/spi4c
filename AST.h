@@ -22,7 +22,7 @@ using SI::util::Ptr;
   DELIMITER DO(Block) DELIMITER DO(Compound) DELIMITER DO(Assignment)     \
       DELIMITER DO(Number) DELIMITER DO(UnaryOp) DELIMITER DO(BinaryOp)   \
           DELIMITER DO(Declaration) DELIMITER DO(Var) DELIMITER DO(Empty) \
-              DELIMITER DO(ProcedureDecl)
+              DELIMITER DO(ProcedureDecl) DELIMITER DO(Param)
 
 #define CLASS_DECL(name) class name
 #define MAKE_ENUM(name) k##name
@@ -146,15 +146,30 @@ class Declaration : public Noncopyable {
   Ptr<ASTNode> proceDecl_;
 };
 
+class Param : public Noncopyable {
+ public:
+  Param(const std::string &var, DeclarationType type = DeclarationType::kNull)
+      : var_(var), type_(type) {}
+  void setType(DeclarationType type) { type_ = type; }
+
+ private:
+  friend class Interpreter;
+  friend class SymbolTableBuilder;
+  const std::string var_;
+  DeclarationType type_;
+};
+
 class ProcedureDecl : public Noncopyable {
  public:
-  ProcedureDecl(const std::string &name, Ptr<ASTNode> block)
+  ProcedureDecl(const std::string &name, std::vector<Ptr<ASTNode>> params,
+                Ptr<ASTNode> block)
       : name_(name), block_(std::move(block)) {}
 
  private:
   friend class Interpreter;
   friend class SymbolTableBuilder;
   const std::string name_;
+  std::vector<Ptr<ASTNode>> params_;
   Ptr<ASTNode> block_;
 };
 
