@@ -19,6 +19,25 @@ class SymbolTable {
   std::unordered_map<std::string, Symbol> table_;
 };
 
+class ScopedSymbolTable {
+ public:
+  ScopedSymbolTable(const std::string &name,
+                    std::shared_ptr<ScopedSymbolTable> upper)
+      : name_(name),
+        level_(upper == nullptr ? 1 : upper->level_ + 1),
+        upper_(std::move(upper)) {}
+  const Symbol *lookup(const std::string &name) const;
+  bool define(const std::string &name, TypeKind kind);
+  std::string metaInfo() const;
+  std::shared_ptr<ScopedSymbolTable> upperScope() { return upper_; }
+
+ private:
+  const std::string name_;
+  const int level_;
+  std::shared_ptr<ScopedSymbolTable> upper_;
+  std::unordered_map<std::string, Symbol> table_;
+};
+
 }  // namespace SI
 
 #endif  // SYMBOL_TABLE_H__

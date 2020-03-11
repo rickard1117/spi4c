@@ -48,7 +48,7 @@ class Parser {
   static Ptr<ASTNode> astDeclaration(
       const std::string &val, DeclarationType type = DeclarationType::kNull,
       Ptr<ASTNode> proceDecl = nullptr);
-  static Ptr<ASTNode> astProgram(Ptr<ASTNode> block);
+  static Ptr<ASTNode> astProgram(const std::string &name, Ptr<ASTNode> block);
   static Ptr<ASTNode> astEmpty();
   static Ptr<ASTNode> astProcedureDecl(const std::string &name,
                                        std::vector<Ptr<ASTNode>> params,

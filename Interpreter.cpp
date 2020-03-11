@@ -38,8 +38,14 @@ void Interpreter::visitBlock(const Block &block) {
   visitCompound(block.compound_->fetch<Compound>());
 }
 
+void Interpreter::visitProcedureDecl(const ProcedureDecl &decl) {}
+
+void Interpreter::visitParam(const Param &param) {}
+
 void Interpreter::visitDecl(const Declaration &decl) {
   if (decl.type_ == DeclarationType::kProcedure) {
+    SI_ASSERT(decl.proceDecl_ != nullptr);
+    visitProcedureDecl(decl.proceDecl_->fetch<ProcedureDecl>());
     return;
   }
   symbolTable_[decl.var_] = 0;

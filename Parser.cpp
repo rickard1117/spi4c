@@ -43,9 +43,9 @@ Ptr<ASTNode> Parser::astDeclaration(const std::string &val,
                                    std::move(proceDecl));
 }
 
-Ptr<ASTNode> Parser::astProgram(Ptr<ASTNode> block) {
-  return std::make_unique<ASTNode>(ASTNodeType::kProgram,
-                                   IN_PLACE_TYPE(Program), std::move(block));
+Ptr<ASTNode> Parser::astProgram(const std::string &name, Ptr<ASTNode> block) {
+  return std::make_unique<ASTNode>(
+      ASTNodeType::kProgram, IN_PLACE_TYPE(Program), name, std::move(block));
 }
 
 Ptr<ASTNode> Parser::astVar(const std::string &id) {
@@ -282,6 +282,7 @@ std::vector<Ptr<ASTNode>> Parser::formalParameterList() {
     vectorMoveExtends(paramList, formalParameterList());
     tok = peekToken();
   }
+
   return paramList;
 }
 
@@ -323,7 +324,6 @@ std::vector<Ptr<ASTNode>> Parser::declarations() {
 
     break;
   }
-
   return decls;
 }
 
@@ -341,10 +341,8 @@ Ptr<ASTNode> Parser::program() {
     unexpectedError(*tok, "variable");
   }
 
-  // The program name, no use for now
-  // auto var = astVar(tok->val());
   eatKeyword(TokenType::kSemi);
-  auto p = astProgram(block());
+  auto p = astProgram(tok->val(), block());
   eatKeyword(TokenType::kDot);
   return p;
 }

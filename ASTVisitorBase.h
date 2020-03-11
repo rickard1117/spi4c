@@ -20,6 +20,8 @@ class ASTVisitorBase : public SI::util::Noncopyable {
   virtual void visitBlock(const class Block &block) = 0;
   virtual void visitDecl(const class Declaration &decl) = 0;
   virtual GeneralArithVal visitVar(const class Var &var) = 0;
+  virtual void visitProcedureDecl(const class ProcedureDecl &decl) = 0;
+  virtual void visitParam(const class Param &param) = 0;
 };
 
 }  // namespace SI

@@ -10,7 +10,7 @@ void CheckSymbolTable(const std::string &s) {
   Parser p{s};
   try {
     auto ast = p.program();
-    SymbolTableBuilder visitor{std::make_shared<SymbolTable>()};
+    SymbolTableBuilder visitor;
     visitor.visitProgram(ast->fetch<Program>());
   } catch (const InterpreterError &err) {
     std::cerr << err.what() << '\n';

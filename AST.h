@@ -49,11 +49,13 @@ class Number : public Noncopyable {
 
 class Program : public Noncopyable {
  public:
-  Program(Ptr<ASTNode> block) : block_(std::move(block)) {}
+  Program(const std::string &name, Ptr<ASTNode> block)
+      : name_(name), block_(std::move(block)) {}
 
  private:
   friend class Interpreter;
   friend class SymbolTableBuilder;
+  const std::string name_;
   Ptr<ASTNode> block_;
 };
 
@@ -163,7 +165,7 @@ class ProcedureDecl : public Noncopyable {
  public:
   ProcedureDecl(const std::string &name, std::vector<Ptr<ASTNode>> params,
                 Ptr<ASTNode> block)
-      : name_(name), block_(std::move(block)) {}
+      : name_(name), params_(std::move(params)), block_(std::move(block)) {}
 
  private:
   friend class Interpreter;

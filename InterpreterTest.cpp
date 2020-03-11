@@ -1,3 +1,4 @@
+#include "Error.h"
 #include "Interpreter.h"
 #include "Lexer.h"
 #include "Parser.h"
@@ -172,6 +173,18 @@ TEST(TestParser, DeclAndCompound) {
   ASSERT_EQ(table["x"], 3);
 }
 
+static void BuildSymbolTable(const std::string &s) {
+  Parser p{s};
+  try {
+    auto ast = p.program();
+    SymbolTableBuilder builder;
+    builder.visitProgram(ast->fetch<Program>());
+  } catch (const InterpreterError &e) {
+    std::cerr << e.what() << '\n';
+    throw;
+  }
+}
+
 TEST(TestParser, TestSimpleProcedureDefine) {
   const std::string s = R"(
     PROGRAM Part12;
@@ -198,9 +211,8 @@ TEST(TestParser, TestSimpleProcedureDefine) {
     END.  {Part12}
   )";
 
-  ASSERT_NO_THROW(ParserProgram(s));
+  ASSERT_NO_THROW(BuildSymbolTable(s));
 }
-
 
 TEST(TestParser, TestSimpleProcedureDefineWithParam) {
   const std::string s = R"(
@@ -228,17 +240,52 @@ TEST(TestParser, TestSimpleProcedureDefineWithParam) {
     END.  {Part12}
   )";
 
-  ASSERT_NO_THROW(ParserProgram(s));
+  ASSERT_NO_THROW(BuildSymbolTable(s));
 }
 
-// TEST(TestParser, TestOneIntVarDeclarationsBlock) {
-//   const std::string s = "VAR number : INTEGER;";
-//   Parser p{s};
-//   auto ast = p.variableDeclaration();
-//   NodeVisitor visitor;
-//   ast->accept(&visitor);
-//   // auto table visitor.varsTable();
-// }
+TEST(TestParser, ScopedUndefineVar) {
+  const std::string s = R"(
+    PROGRAM Part12;
+    VAR
+      i1 : INTEGER;
+
+    PROCEDURE P1(i2 : INTEGER; d1:REAL);
+
+    BEGIN {P1}
+    i3 := 3; {undefined !!!}
+    i1 := 1; {upper scoped var i1}
+    d1 := 3.2;
+    END;  {P1}
+
+    BEGIN {Part12}
+      i1 := 10;
+    END.  {Part12}
+  )";
+
+  ASSERT_THROW(BuildSymbolTable(s), InterpreterError);
+}
+
+TEST(TestParser, ScopedDupDefineVar) {
+  const std::string s = R"(
+    PROGRAM Part12;
+    VAR
+      i1 : INTEGER;
+
+    PROCEDURE P1(i1, d2, d1:REAL);
+
+    BEGIN {P1}
+    i1 := 1.0; {inner scope define i1, different type with outter one}
+    d2 := 3.2;
+    d1 := 1.1;
+    END;  {P1}
+
+    BEGIN {Part12}
+      i1 := 10;
+    END.  {Part12}
+  )";
+
+  ASSERT_NO_THROW(BuildSymbolTable(s));
+}
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

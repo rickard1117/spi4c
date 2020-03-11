@@ -8,21 +8,24 @@ namespace SI {
 
 class SymbolTableBuilder : public ASTVisitorBase {
  public:
-  SymbolTableBuilder(std::shared_ptr<class SymbolTable> table)
-      : table_(table) {}
-  void visitCompound(const class Compound &com);
-  void visitAssignment(const class Assignment &assign);
-  GeneralArithVal visitArithExpr(const class ASTNode &ast);
-  GeneralArithVal visitBinOp(const class BinaryOp &op);
-  GeneralArithVal visitUnaryOp(const class UnaryOp &op);
-  GeneralArithVal visitNumber(const class Number &num);
-  void visitProgram(const class Program &prog);
-  void visitBlock(const class Block &block);
-  void visitDecl(const class Declaration &decl);
-  GeneralArithVal visitVar(const class Var &var);
+  SymbolTableBuilder() = default;
+  void visitCompound(const class Compound &com) override;
+  void visitAssignment(const class Assignment &assign) override;
+  GeneralArithVal visitArithExpr(const class ASTNode &ast) override;
+  GeneralArithVal visitBinOp(const class BinaryOp &op) override;
+  GeneralArithVal visitUnaryOp(const class UnaryOp &op) override;
+  GeneralArithVal visitNumber(const class Number &num) override;
+  void visitProgram(const class Program &prog) override;
+  void visitBlock(const class Block &block) override;
+  void visitDecl(const class Declaration &decl) override;
+  GeneralArithVal visitVar(const class Var &var) override;
+  void visitProcedureDecl(const class ProcedureDecl &decl) override;
+  void visitParam(const class Param &param) override;
 
  private:
-  std::shared_ptr<class SymbolTable> table_;
+  void enterNewScope(const std::string &name);
+  void exitScope();
+  std::shared_ptr<ScopedSymbolTable> currentTable_;
 };
 
 }  // namespace SI
