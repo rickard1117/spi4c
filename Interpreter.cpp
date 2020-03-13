@@ -94,12 +94,12 @@ GeneralArithVal Interpreter::visitNumber(const Number &num) {
   throw "Number type not match";
 }
 
-GeneralArithVal Interpreter::visitVar(const Var &var) {
-  auto itr = symbolTable_.find(var.id_);
+GeneralArithVal Interpreter::visitID(const ID &var) {
+  auto itr = symbolTable_.find(var.name_);
 
-  SI_ASSERT_MSG(itr != symbolTable_.cend(), "var not defined ! : " + var.id_);
+  SI_ASSERT_MSG(itr != symbolTable_.cend(), "var not defined ! : " + var.name_);
 
-  return symbolTable_[var.id_];
+  return symbolTable_[var.name_];
 }
 
 GeneralArithVal Interpreter::visitArithExpr(const ASTNode &ast) {
@@ -110,8 +110,8 @@ GeneralArithVal Interpreter::visitArithExpr(const ASTNode &ast) {
       return visitNumber(ast.fetch<Number>());
     case ASTNodeType::kUnaryOp:
       return visitUnaryOp(ast.fetch<UnaryOp>());
-    case ASTNodeType::kVar:
-      return visitVar(ast.fetch<Var>());
+    case ASTNodeType::kID:
+      return visitID(ast.fetch<ID>());
     default:
       SI_ASSERT_MSG(0,
                     "visitArithExpr type not match!!! " +
@@ -121,7 +121,7 @@ GeneralArithVal Interpreter::visitArithExpr(const ASTNode &ast) {
 }
 
 void Interpreter::visitAssignment(const Assignment &ast) {
-  const auto &id = ast.var_->fetch<Var>().id_;
+  const auto &id = ast.var_->fetch<ID>().name_;
   if (symbolTable_.find(id) == symbolTable_.cend()) {
     SI_ASSERT_MSG(0, "var not defined ! : " + id);
   }

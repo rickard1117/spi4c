@@ -103,8 +103,8 @@ GeneralArithVal SymbolTableBuilder::visitNumber(const Number &num) {
   return GeneralArithVal();
 }
 
-GeneralArithVal SymbolTableBuilder::visitVar(const Var &var) {
-  const std::string &name = var.id_;
+GeneralArithVal SymbolTableBuilder::visitID(const ID &id) {
+  const std::string &name = id.name_;
   if (currentTable_->lookup(name) == nullptr) {
     throw InterpreterError(kErrorIDNotFound, name);
   }
@@ -119,8 +119,8 @@ GeneralArithVal SymbolTableBuilder::visitArithExpr(const ASTNode &ast) {
       break;
     case ASTNodeType::kUnaryOp:
       return visitUnaryOp(ast.fetch<UnaryOp>());
-    case ASTNodeType::kVar:
-      return visitVar(ast.fetch<Var>());
+    case ASTNodeType::kID:
+      return visitID(ast.fetch<ID>());
     default:
       SI_ASSERT_MSG(0,
                     "visitArithExpr type not match!!! " +
@@ -130,7 +130,7 @@ GeneralArithVal SymbolTableBuilder::visitArithExpr(const ASTNode &ast) {
 }
 
 void SymbolTableBuilder::visitAssignment(const Assignment &assign) {
-  visitVar(assign.var_->fetch<Var>());
+  visitID(assign.var_->fetch<ID>());
   visitArithExpr(*assign.expr_);
 }
 

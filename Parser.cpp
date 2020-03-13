@@ -49,7 +49,7 @@ Ptr<ASTNode> Parser::astProgram(const std::string &name, Ptr<ASTNode> block) {
 }
 
 Ptr<ASTNode> Parser::astVar(const std::string &id) {
-  return std::make_unique<ASTNode>(ASTNodeType::kVar, IN_PLACE_TYPE(Var), id);
+  return std::make_unique<ASTNode>(ASTNodeType::kID, IN_PLACE_TYPE(ID), id);
 }
 
 Ptr<ASTNode> Parser::astAssignment(Ptr<ASTNode> var, Ptr<ASTNode> expr) {

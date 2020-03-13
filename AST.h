@@ -17,11 +17,11 @@ using SI::util::Ptr;
 
 #define COMMA ,
 #define SEMI ;
-#define AST_TYPE(DO, DELIMITER)                                           \
-  DO(Program)                                                             \
-  DELIMITER DO(Block) DELIMITER DO(Compound) DELIMITER DO(Assignment)     \
-      DELIMITER DO(Number) DELIMITER DO(UnaryOp) DELIMITER DO(BinaryOp)   \
-          DELIMITER DO(Declaration) DELIMITER DO(Var) DELIMITER DO(Empty) \
+#define AST_TYPE(DO, DELIMITER)                                          \
+  DO(Program)                                                            \
+  DELIMITER DO(Block) DELIMITER DO(Compound) DELIMITER DO(Assignment)    \
+      DELIMITER DO(Number) DELIMITER DO(UnaryOp) DELIMITER DO(BinaryOp)  \
+          DELIMITER DO(Declaration) DELIMITER DO(ID) DELIMITER DO(Empty) \
               DELIMITER DO(ProcedureDecl) DELIMITER DO(Param)
 
 #define CLASS_DECL(name) class name
@@ -121,14 +121,14 @@ class BinaryOp : public Noncopyable {
   Ptr<ASTNode> right_;
 };
 
-class Var : public Noncopyable {
+class ID : public Noncopyable {
  public:
-  Var(const std::string &val) : id_(val) {}
+  ID(const std::string &val) : name_(val) {}
 
  private:
   friend class Interpreter;
   friend class SymbolTableBuilder;
-  const std::string id_;
+  const std::string name_;
 };
 
 enum class DeclarationType { kNull, kInt, kReal, kProcedure };

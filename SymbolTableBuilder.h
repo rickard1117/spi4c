@@ -18,7 +18,7 @@ class SymbolTableBuilder : public ASTVisitorBase {
   void visitProgram(const class Program &prog) override;
   void visitBlock(const class Block &block) override;
   void visitDecl(const class Declaration &decl) override;
-  GeneralArithVal visitVar(const class Var &var) override;
+  GeneralArithVal visitID(const class ID &var) override;
   void visitProcedureDecl(const class ProcedureDecl &decl) override;
   void visitParam(const class Param &param) override;
 
