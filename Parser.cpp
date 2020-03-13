@@ -91,7 +91,7 @@ void Parser::eatKeyword(TokenType expect) {
   }
 }
 
-std::string Parser::eatVar() {
+std::string Parser::eatID() {
   auto tok = readToken();
   if (!tok->isVar()) {
     unexpectedError(*tok, "variable");
@@ -215,13 +215,13 @@ Ptr<ASTNode> Parser::assignmentStatement() {
 // type_spec : INTEGER | REAL
 std::vector<Ptr<ASTNode>> Parser::variableDeclaration() {
   std::vector<Ptr<ASTNode>> decls;
-  auto val = eatVar();
+  auto val = eatID();
   decls.push_back(astDeclaration(val));
 
   auto tok = peekToken();
   while (tok->type() == TokenType::kComma) {
     eatKeyword(TokenType::kComma);
-    decls.push_back(astDeclaration(eatVar()));
+    decls.push_back(astDeclaration(eatID()));
     tok = peekToken();
   }
 
@@ -252,13 +252,13 @@ DeclarationType Parser::typeSpec() {
 // formal_parameters : ID (COMMA ID)* COLON type_spec
 std::vector<Ptr<ASTNode>> Parser::formalParameters() {
   std::vector<Ptr<ASTNode>> decls;
-  auto val = eatVar();
+  auto val = eatID();
   decls.push_back(astParam(val));
 
   auto tok = peekToken();
   while (tok->type() == TokenType::kComma) {
     eatKeyword(TokenType::kComma);
-    decls.push_back(astParam(eatVar()));
+    decls.push_back(astParam(eatID()));
     tok = peekToken();
   }
 
@@ -306,7 +306,7 @@ std::vector<Ptr<ASTNode>> Parser::declarations() {
 
     if (tok->type() == TokenType::kProcedure) {
       eatKeyword(TokenType::kProcedure);
-      auto name = eatVar();
+      auto name = eatID();
       std::vector<Ptr<ASTNode>> params;
       tok = peekToken();
       if (tok->type() == TokenType::kLparent) {
@@ -366,6 +366,28 @@ std::vector<Ptr<ASTNode>> Parser::statementList() {
   }
 
   return list;
+}
+
+// proccall_statement : ID LPAREN (expr (COMMA expr)*)? RPAREN
+Ptr<ASTNode> Parser::procedureCallStatement() {
+  auto id = eatID();
+  eatKeyword(TokenType::kLparent);
+
+  auto tok = peekToken();
+  if (tok->type() != TokenType::kRparent) {
+    std::vector<Ptr<ASTNode>> params;
+
+    params.push_back(expr());
+    tok = peekToken();
+    while (tok->type() == TokenType::kComma) {
+      eatKeyword(TokenType::kComma);
+      params.push_back(expr());
+      tok = peekToken();
+    }
+  }
+  eatKeyword(TokenType::kRparent);
+
+  return nullptr;
 }
 
 Ptr<ASTNode> Parser::empty() { return astEmpty(); }

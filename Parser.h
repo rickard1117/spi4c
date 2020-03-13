@@ -27,6 +27,7 @@ class Parser {
   std::vector<Ptr<ASTNode>> formalParameterList();
   std::vector<Ptr<ASTNode>> declarations();
   std::vector<Ptr<ASTNode>> variableDeclaration();
+  Ptr<ASTNode> procedureCallStatement();
   DeclarationType typeSpec();
 
  private:
@@ -57,7 +58,7 @@ class Parser {
                                DeclarationType type = DeclarationType::kNull);
 
   void eatKeyword(TokenType expect);
-  std::string eatVar();
+  std::string eatID();
 
   Lexer lexer_;
   std::optional<std::unique_ptr<Token>> peekToken_;
