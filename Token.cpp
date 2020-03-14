@@ -46,7 +46,7 @@ Token::Token(TokenType type, std::size_t lineno, std::size_t colno,
 }
 
 const std::string Token::val() const {
-  if (isVar() || isNumber()) {
+  if (isID() || isNumber()) {
     return val_.value();
   }
   return idtoval(type_);

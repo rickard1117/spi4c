@@ -98,7 +98,7 @@ std::unique_ptr<Token> Lexer::read_ident(char c) {
   if (tokid != TokenType::kNull) {
     tok = std::make_unique<Token>(tokid, currentLine_, currentCol_);
   } else {
-    tok = std::make_unique<Token>(TokenType::kVar, currentLine_, currentCol_,
+    tok = std::make_unique<Token>(TokenType::kID, currentLine_, currentCol_,
                                   std::move(val));
   }
 

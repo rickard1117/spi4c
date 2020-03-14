@@ -128,4 +128,6 @@ void Interpreter::visitAssignment(const Assignment &ast) {
   symbolTable_[id] = visitArithExpr(*ast.expr_);
 }
 
+void Interpreter::visitProcedureCall(const ProcedureCall &call) {}
+
 }  // namespace SI

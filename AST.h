@@ -182,6 +182,8 @@ class ProcedureCall : public Noncopyable {
       : name_(name), params_(std::move(params)) {}
 
  private:
+  friend class Interpreter;
+  friend class SymbolTableBuilder;
   const std::string name_;
   std::vector<Ptr<ASTNode>> params_;
 };

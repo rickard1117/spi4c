@@ -138,7 +138,7 @@ TEST(Lexer, TestVarToken) {
   Lexer l{"aAbBcC := 3"};
 
   auto t = l.getNextToken();
-  EXPECT_EQ(t->type(), TokenType::kVar);
+  EXPECT_EQ(t->type(), TokenType::kID);
   EXPECT_EQ(t->val(), "aAbBcC");
 
   t = l.getNextToken();
@@ -156,8 +156,8 @@ TEST(Lexer, TestSemiToken) {
 }
 
 TEST(Token, Testidtoval) {
-  Token t{TokenType::kVar, 0, 0, "abc123"};
-  EXPECT_EQ(t.isVar(), true);
+  Token t{TokenType::kID, 0, 0, "abc123"};
+  EXPECT_EQ(t.isID(), true);
   EXPECT_EQ(t.val(), "abc123");
 
   Token t2{TokenType::kBegin, 0, 0, "abc123"};

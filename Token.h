@@ -10,7 +10,7 @@ namespace SI {
 
 enum class TokenType {
   kNull = 0,
-  kVar,
+  kID,
   kNumber,
 #define op(name, _) name,
 #define keyword(name, _) name,
@@ -32,7 +32,7 @@ class Token : public SI::util::Noncopyable {
   const std::string val() const;
   const std::string toString() const;
   TokenType type() const { return type_; }
-  bool isVar() const { return type_ == TokenType::kVar; }
+  bool isID() const { return type_ == TokenType::kID; }
   bool isNumber() const { return type_ == TokenType::kNumber; }
 
  private:

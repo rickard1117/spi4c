@@ -24,6 +24,8 @@ class Interpreter : public ASTVisitorBase {
   GeneralArithVal visitID(const class ID &var) override;
   void visitProcedureDecl(const class ProcedureDecl &decl) override;
   void visitParam(const class Param &param) override;
+  void visitProcedureCall(const class ProcedureCall &call) override;
+
   const std::map<std::string, GeneralArithVal> &symbols() const {
     return symbolTable_;
   }

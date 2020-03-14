@@ -21,7 +21,8 @@ class SymbolTableBuilder : public ASTVisitorBase {
   GeneralArithVal visitID(const class ID &var) override;
   void visitProcedureDecl(const class ProcedureDecl &decl) override;
   void visitParam(const class Param &param) override;
-
+  void visitProcedureCall(const class ProcedureCall &call) override;
+  
  private:
   void enterNewScope(const std::string &name);
   void exitScope();

@@ -19,6 +19,8 @@ void SymbolTableBuilder::visitCompound(const Compound &com) {
         continue;
       case ASTNodeType::kEmpty:
         continue;
+      case ASTNodeType::kProcedureCall:
+        visitProcedureCall(ast->fetch<ProcedureCall>());
       default:
         SI_ASSERT_MSG(
             0, "compound children type not match!!! " +
@@ -132,6 +134,12 @@ GeneralArithVal SymbolTableBuilder::visitArithExpr(const ASTNode &ast) {
 void SymbolTableBuilder::visitAssignment(const Assignment &assign) {
   visitID(assign.var_->fetch<ID>());
   visitArithExpr(*assign.expr_);
+}
+
+void SymbolTableBuilder::visitProcedureCall(const ProcedureCall &call) {
+  for (auto &param : call.params_) {
+    visitArithExpr(*param);
+  }
 }
 
 }  // namespace SI

@@ -22,6 +22,7 @@ class ASTVisitorBase : public SI::util::Noncopyable {
   virtual GeneralArithVal visitID(const class ID &var) = 0;
   virtual void visitProcedureDecl(const class ProcedureDecl &decl) = 0;
   virtual void visitParam(const class Param &param) = 0;
+  virtual void visitProcedureCall(const class ProcedureCall &call) = 0;
 };
 
 }  // namespace SI

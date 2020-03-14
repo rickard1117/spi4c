@@ -287,6 +287,24 @@ TEST(TestParser, ScopedDupDefineVar) {
   ASSERT_NO_THROW(BuildSymbolTable(s));
 }
 
+TEST(TestParser, TestParseProcedureCall) {
+  const std::string s = R"(
+  PROGRAM Main;
+  PROCEDURE Alpha(a : INTEGER; b : INTEGER);
+  VAR x : INTEGER;
+  BEGIN
+    x := (a + b ) * 2;
+  END;
+  BEGIN { Main }
+    Alpha(3 + 5, 7);  { procedure call }
+  END.  { Main }
+
+  )";
+
+  ASSERT_NO_THROW(BuildSymbolTable(s));
+  ASSERT_NO_THROW(ParserProgram(s));
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

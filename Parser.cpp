@@ -48,7 +48,7 @@ Ptr<ASTNode> Parser::astProgram(const std::string &name, Ptr<ASTNode> block) {
       ASTNodeType::kProgram, IN_PLACE_TYPE(Program), name, std::move(block));
 }
 
-Ptr<ASTNode> Parser::astVar(const std::string &id) {
+Ptr<ASTNode> Parser::astID(const std::string &id) {
   return std::make_unique<ASTNode>(ASTNodeType::kID, IN_PLACE_TYPE(ID), id);
 }
 
@@ -80,6 +80,13 @@ Ptr<ASTNode> Parser::astParam(const std::string &val, DeclarationType type) {
                                    val, type);
 }
 
+Ptr<ASTNode> Parser::astProcedureCall(const std::string &name,
+                                      std::vector<Ptr<ASTNode>> params) {
+  return std::make_unique<ASTNode>(ASTNodeType::kProcedureCall,
+                                   IN_PLACE_TYPE(ProcedureCall), name,
+                                   std::move(params));
+}
+
 Ptr<ASTNode> Parser::readNumber(const Token &tok) const {
   return astNumber(tok.val());
 }
@@ -93,7 +100,7 @@ void Parser::eatKeyword(TokenType expect) {
 
 std::string Parser::eatID() {
   auto tok = readToken();
-  if (!tok->isVar()) {
+  if (!tok->isID()) {
     unexpectedError(*tok, "variable");
   }
   return tok->val();
@@ -119,8 +126,8 @@ Ptr<ASTNode> Parser::factor() {
       eatKeyword(TokenType::kRparent);
       return ast;
     }
-    case TokenType::kVar:
-      return astVar(tok->val());
+    case TokenType::kID:
+      return astID(tok->val());
     default:
       unexpectedError(*tok, "factor");
   }
@@ -201,14 +208,9 @@ Ptr<ASTNode> Parser::expr() {
   return left;
 }
 
-Ptr<ASTNode> Parser::assignmentStatement() {
-  auto var = readToken();
-
-  if (var->type() != TokenType::kVar) {
-    unexpectedError(*var, "variable");
-  }
+Ptr<ASTNode> Parser::assignmentStatement(std::string id) {
   eatKeyword(TokenType::kAssign);
-  return astAssignment(astVar(var->val()), expr());
+  return astAssignment(astID(id), expr());
 }
 
 // variable_declaration : ID (COMMA ID)* COLON type_spec
@@ -301,7 +303,7 @@ std::vector<Ptr<ASTNode>> Parser::declarations() {
                      std::make_move_iterator(decl.end()));
         eatKeyword(TokenType::kSemi);
         tok = peekToken();
-      } while (tok->isVar());
+      } while (tok->isID());
     }
 
     if (tok->type() == TokenType::kProcedure) {
@@ -337,7 +339,7 @@ Ptr<ASTNode> Parser::block() {
 Ptr<ASTNode> Parser::program() {
   eatKeyword(TokenType::kProgram);
   auto tok = readToken();
-  if (!tok->isVar()) {
+  if (!tok->isID()) {
     unexpectedError(*tok, "variable");
   }
 
@@ -369,14 +371,12 @@ std::vector<Ptr<ASTNode>> Parser::statementList() {
 }
 
 // proccall_statement : ID LPAREN (expr (COMMA expr)*)? RPAREN
-Ptr<ASTNode> Parser::procedureCallStatement() {
-  auto id = eatID();
+Ptr<ASTNode> Parser::procedureCallStatement(std::string id) {
   eatKeyword(TokenType::kLparent);
 
+  std::vector<Ptr<ASTNode>> params;
   auto tok = peekToken();
   if (tok->type() != TokenType::kRparent) {
-    std::vector<Ptr<ASTNode>> params;
-
     params.push_back(expr());
     tok = peekToken();
     while (tok->type() == TokenType::kComma) {
@@ -387,20 +387,28 @@ Ptr<ASTNode> Parser::procedureCallStatement() {
   }
   eatKeyword(TokenType::kRparent);
 
-  return nullptr;
+  return astProcedureCall(id, std::move(params));
 }
 
 Ptr<ASTNode> Parser::empty() { return astEmpty(); }
 
-// statement : compound_statement | assignment_statement | empty
+// statement : compound_statement
+//           | proccall_statement
+//           | assignment_statement
+//           | empty
 Ptr<ASTNode> Parser::statement() {
   auto tok = peekToken();
   if (tok->type() == TokenType::kBegin) {
     return compoundStatement();
   }
 
-  if (tok->isVar()) {
-    return assignmentStatement();
+  if (tok->isID()) {
+    auto id = eatID();
+    tok = peekToken();
+    if (tok->type() == TokenType::kAssign) {
+      return assignmentStatement(std::move(id));
+    }
+    return procedureCallStatement(std::move(id));
   }
 
   return empty();
